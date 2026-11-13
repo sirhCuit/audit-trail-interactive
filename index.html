@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="color-scheme" content="light" />
+<meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:," />
-<title>Audit Trial Studio</title>
+<title>Audit Trail Interactive</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700;8..60,900&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F7F2E7;
@@ -31,7 +31,59 @@
     --shadow-hover:0 1px 0 rgba(255,255,255,.8) inset, 0 22px 46px rgba(84,60,8,.18), 0 0 0 1px rgba(146,64,14,.22);
     --radius:20px;
     --sl:.7; --sc:.85; --sr:.6;
+    --nav-bg:rgba(255,253,246,.94);
+    --dock-bg:rgba(255,255,255,.92);
+    --title-ink:#1B1710;
+    --wisp:#B45309;
   }
+  [data-theme="dark"]{
+    --bg:#000000;
+    --bg-2:#0A0A0B;
+    --card:#121214;
+    --card-2:#17171A;
+    --ink:#F7F3E8;
+    --ink-soft:#EDE8D8;
+    --ink-faint:#CFC8B4;
+    --gold:#F59E0B;
+    --gold-bright:#FCD34D;
+    --gold-deep:#FBBF24;
+    --teal:#2DD4BF;
+    --violet:#C4B5FD;
+    --line:#33302A;
+    --line-strong:#9A917E;
+    --focus:#7DD3FC;
+    --tip-bg:#F7F3E8;
+    --shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 14px 34px rgba(0,0,0,.6);
+    --shadow-hover:0 1px 0 rgba(255,255,255,.08) inset, 0 22px 46px rgba(0,0,0,.7), 0 0 0 1px rgba(251,191,36,.35);
+    --nav-bg:rgba(0,0,0,.94);
+    --dock-bg:rgba(10,10,11,.94);
+    --title-ink:#FFF8E1;
+    --wisp:#D97706;
+  }
+  [data-theme="dark"] body{
+    background:#000000;
+    background-image:
+      radial-gradient(900px 500px at 50% -80px, rgba(217,119,6,.16), transparent 65%),
+      radial-gradient(700px 500px at 90% 30%, rgba(45,212,191,.06), transparent 60%),
+      radial-gradient(800px 600px at 5% 70%, rgba(91,33,182,.08), transparent 60%),
+      linear-gradient(180deg,#050505 0%, #000000 420px);
+  }
+  [data-theme="dark"] .filter-dock{background:var(--dock-bg)}
+  [data-theme="dark"] .marquee-toggle,
+  [data-theme="dark"] .cta-ghost,
+  [data-theme="dark"] .plan-room,
+  [data-theme="dark"] .status-counter{background:#0D0D0F; color:var(--ink)}
+  [data-theme="dark"] .plan{background:#0A0A0B; box-shadow:inset 0 0 0 4px #17171A}
+  [data-theme="dark"] .about{background:linear-gradient(180deg,#111113,#0D0D0F)}
+  [data-theme="dark"] .a11y-note{background:linear-gradient(135deg, rgba(251,191,36,.14), rgba(45,212,191,.08) 55%, #0D0D0F)}
+  [data-theme="dark"] .clock-face{background:#0D0D0F; box-shadow:inset 0 0 0 2px #2A2822, inset 0 4px 14px rgba(0,0,0,.6), 0 0 18px rgba(251,191,36,.22)}
+  [data-theme="dark"] .clock-face .hand{background:#F7F3E8}
+  [data-theme="dark"] .clock-face .hand-sec{background:#F87171}
+  [data-theme="dark"] #wcagTip{background:#F7F3E8; color:#1B1710; border-color:#92400E}
+  [data-theme="dark"] #wcagTip strong{color:#92400E}
+  [data-theme="dark"] .info-btn{background:#F7F3E8; color:#1B1710; border-color:#F7F3E8}
+  [data-theme="dark"] .filter-btn:hover{background:#1C1C1F}
+  [data-theme="dark"] .card:first-child{background:linear-gradient(135deg, #1F1808 0%, var(--card) 55%)}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{
@@ -62,14 +114,18 @@
   #lantern.on{opacity:1}
   @property --beam-a { syntax:"<angle>"; initial-value:0deg; inherits:false; }
 
-  /* Spotlights in hero — driven by the track-light dimmers */
+  /* Spotlights — cones START at the underside lens of each fixture head.
+     Fixture geometry: header padding-top 58px + rail at top of flow.
+     Lens underside sits at ~96px from header top; every cone's narrow
+     apex is anchored there, centred under its head (16% / 50% / 84%). */
   .spotlights{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0}
-  .spot{position:absolute; top:-120px; width:340px; height:620px; background:linear-gradient(180deg, rgba(245,158,11,.34), rgba(245,158,11,0) 72%); clip-path:polygon(42% 0,58% 0,100% 100%,0 100%); filter:blur(6px); transform-origin:top center;}
-  .spot-l{left:6%; transform:rotate(14deg); opacity:var(--sl); animation:swayL 11s ease-in-out infinite alternate}
-  .spot-c{left:50%; margin-left:-170px; transform:rotate(0deg); opacity:var(--sc); background:linear-gradient(180deg, rgba(251,191,36,.36), rgba(251,191,36,0) 72%)}
-  .spot-r{right:6%; transform:rotate(-14deg); opacity:var(--sr); animation:swayR 13s ease-in-out infinite alternate; background:linear-gradient(180deg, rgba(11,107,94,.20), rgba(11,107,94,0) 72%)}
-  @keyframes swayL{from{transform:rotate(10deg)} to{transform:rotate(18deg)}}
-  @keyframes swayR{from{transform:rotate(-10deg)} to{transform:rotate(-18deg)}}
+  .spot{position:absolute; top:86px; width:360px; height:560px; margin-left:-180px; background:linear-gradient(180deg, rgba(245,158,11,.38), rgba(245,158,11,.10) 34%, rgba(245,158,11,0) 74%); clip-path:polygon(41.5% 0,58.5% 0,100% 100%,0 100%); filter:blur(5px); transform-origin:50% 0;}
+  .spot-l{left:16%; transform:rotate(7deg); opacity:var(--sl); animation:swayL 11s ease-in-out infinite alternate}
+  .spot-c{left:50%; transform:rotate(0deg); opacity:var(--sc); background:linear-gradient(180deg, rgba(251,191,36,.40), rgba(251,191,36,.10) 34%, rgba(251,191,36,0) 74%)}
+  .spot-r{left:84%; transform:rotate(-7deg); opacity:var(--sr); animation:swayR 13s ease-in-out infinite alternate; background:linear-gradient(180deg, rgba(11,107,94,.22), rgba(11,107,94,.06) 34%, rgba(11,107,94,0) 74%)}
+  [data-theme="dark"] .spot{filter:blur(4px)}
+  @keyframes swayL{from{transform:rotate(5deg)} to{transform:rotate(9deg)}}
+  @keyframes swayR{from{transform:rotate(-5deg)} to{transform:rotate(-9deg)}}
 
   .blobs{position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none}
   .blob{position:absolute; border-radius:50%; filter:blur(90px); opacity:.22; will-change:transform}
@@ -102,32 +158,120 @@
   .info-row{display:flex; align-items:center; gap:10px}
   .info-row .grow{flex:1}
 
+  /* ============ STICKY NAV: mini clock + theme switch ============ */
+  .sticky-nav{
+    position:sticky; top:10px; z-index:70; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--nav-bg); backdrop-filter:blur(14px); border:1px solid var(--line-strong);
+    border-radius:999px; padding:8px 10px 8px 18px; box-shadow:0 12px 28px rgba(84,60,8,.16); margin-top:14px;
+  }
+  [data-theme="dark"] .sticky-nav{box-shadow:0 12px 28px rgba(0,0,0,.7), 0 0 18px rgba(251,191,36,.08)}
+  .nav-brand{font-family:"Source Serif 4","Century Schoolbook",Georgia,serif; font-weight:900; font-size:1rem; color:var(--ink); letter-spacing:.01em; white-space:nowrap}
+  .nav-spacer{flex:1}
+  .mini-clock{display:inline-flex; align-items:center; gap:9px; min-height:44px}
+  .mini-face{width:36px; height:36px; flex:none; border-radius:50%; background:#FFFDF6; border:2.5px solid #A8842F; position:relative; transition:box-shadow .4s ease, background .4s ease}
+  .mini-face .hand{position:absolute; left:50%; bottom:50%; transform-origin:50% 100%; border-radius:99px; background:#1B1710}
+  .mini-hand-hour{width:3.5px; height:9px; margin-left:-1.75px}
+  .mini-hand-min{width:2.5px; height:13px; margin-left:-1.25px}
+  .mini-hand-sec{width:1.5px; height:14px; margin-left:-.75px; background:#B91C1C}
+  .mini-pin{position:absolute; left:50%; top:50%; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:#92400E}
+  .mini-time{font-weight:800; font-size:.95rem; color:var(--ink); white-space:nowrap; transition:text-shadow .4s ease}
+  .mini-date{font-weight:600; font-size:.82rem; color:var(--ink-faint); white-space:nowrap}
+  @media (max-width:560px){ .mini-date{display:none} .nav-brand{font-size:.88rem} }
+  /* Dark-mode glow variant of the mini clock */
+  [data-theme="dark"] .mini-face{background:#050505; border-color:#FCD34D; box-shadow:0 0 10px rgba(251,191,36,.65), 0 0 26px rgba(251,191,36,.35), inset 0 0 8px rgba(251,191,36,.25)}
+  [data-theme="dark"] .mini-face .hand{background:#FFF8E1}
+  [data-theme="dark"] .mini-face .mini-hand-sec{background:#F87171}
+  [data-theme="dark"] .mini-pin{background:#FCD34D}
+  [data-theme="dark"] .mini-time{color:#FDE68A; text-shadow:0 0 10px rgba(251,191,36,.75), 0 0 22px rgba(251,191,36,.35)}
+  /* Light / Dark switch: inactive = Light (default), active = Dark */
+  .theme-switch-wrap{display:inline-flex; align-items:center; gap:9px}
+  .theme-switch-label{font-size:.85rem; font-weight:800; letter-spacing:.05em; color:var(--ink-faint); text-transform:uppercase}
+  .theme-switch{
+    position:relative; width:64px; height:34px; min-width:64px; min-height:34px; flex:none;
+    border-radius:999px; border:2px solid var(--line-strong); background:#EDE6D2; cursor:pointer; padding:0;
+    transition:background .35s ease, box-shadow .35s ease;
+  }
+  .theme-switch .knob{
+    position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #FEF3C7, #F59E0B); box-shadow:0 2px 6px rgba(27,23,16,.4);
+    transition:transform .35s cubic-bezier(.22,.9,.3,1.2), background .35s ease;
+  }
+  .theme-switch[aria-checked="true"]{background:#000000; box-shadow:0 0 14px rgba(251,191,36,.35), inset 0 0 8px rgba(251,191,36,.2)}
+  .theme-switch[aria-checked="true"] .knob{transform:translateX(30px); background:radial-gradient(circle at 35% 35%, #FFFBEB, #FCD34D); box-shadow:0 0 10px rgba(251,191,36,.8)}
+  .theme-state{font-size:.9rem; font-weight:800; color:var(--ink); min-width:38px}
+
   /* HERO */
   header.top{ position:relative; text-align:center; padding:58px 10px 8px; isolation:isolate; }
 
-  /* Track-light rail: a real rail screwed to the top of the wall */
-  .track-rail{position:relative; z-index:2; max-width:760px; margin:0 auto 26px; height:14px; border-radius:7px; background:linear-gradient(180deg,#3F3A30,#1B1710); box-shadow:0 4px 10px rgba(27,23,16,.35), 0 1px 0 rgba(255,255,255,.5);}
-  .track-rail::before,.track-rail::after{content:""; position:absolute; top:3px; width:8px; height:8px; border-radius:50%; background:#C9BFA3; box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
-  .track-rail::before{left:14px}.track-rail::after{right:14px}
-  .lamp{position:absolute; top:12px; width:34px; height:30px; margin-left:-17px; background:linear-gradient(180deg,#57534E,#1B1710); border-radius:6px 6px 14px 14px; box-shadow:0 6px 12px rgba(27,23,16,.3)}
-  .lamp::after{content:""; position:absolute; left:6px; right:6px; bottom:3px; height:7px; border-radius:50%; background:#FDE68A; box-shadow:0 0 14px 4px rgba(251,191,36,.55)}
-  .lamp-l{left:16%}.lamp-c{left:50%}.lamp-r{left:84%}
+  /* Futuristic light fixture: one slim levitating rail, three flat
+     disc heads on thin stems. Light leaves ONLY from the lens on the
+     underside of each disc — that is where the cones above begin. */
+  .fixture{position:relative; z-index:2; max-width:820px; margin:0 auto 30px; height:38px}
+  .fixture-rail{position:absolute; left:0; right:0; top:0; height:6px; border-radius:99px; background:linear-gradient(90deg,#292524,#78716C 18%,#E7E5E4 50%,#78716C 82%,#292524); box-shadow:0 2px 8px rgba(27,23,16,.35), 0 0 12px rgba(251,191,36,.18)}
+  .fixture-rail::after{content:""; position:absolute; left:6%; right:6%; top:2px; height:2px; border-radius:99px; background:linear-gradient(90deg,transparent,#FCD34D,#2DD4BF,transparent); opacity:.85}
+  [data-theme="dark"] .fixture-rail{box-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 18px rgba(251,191,36,.35)}
+  .fixture-head{position:absolute; top:6px; width:76px; height:32px; margin-left:-38px}
+  .fixture-head::before{content:""; position:absolute; left:50%; top:0; width:2px; height:12px; margin-left:-1px; background:#57534E}
+  .fixture-disc{position:absolute; left:0; top:12px; width:76px; height:13px; border-radius:50%; background:linear-gradient(180deg,#E7E5E4,#78716C 55%,#292524); box-shadow:0 5px 10px rgba(27,23,16,.32)}
+  .fixture-lens{position:absolute; left:9px; right:9px; top:21px; height:7px; border-radius:50%; background:#FEF3C7; box-shadow:0 0 16px 5px rgba(251,191,36,.55), 0 6px 18px 2px rgba(251,191,36,.28)}
+  [data-theme="dark"] .fixture-lens{box-shadow:0 0 22px 8px rgba(251,191,36,.75), 0 8px 26px 4px rgba(251,191,36,.4)}
+  .fixture-head-l{left:16%}.fixture-head-c{left:50%}.fixture-head-r{left:84%}
+  .fixture-head-l .fixture-lens{opacity:var(--sl)} .fixture-head-c .fixture-lens{opacity:var(--sc)} .fixture-head-r .fixture-lens{opacity:var(--sr)}
 
-  .hero-badge{
-    display:inline-flex; align-items:center; gap:10px;
+  /* Status counter — replaces the old date pill. Every state gets its
+     own breathing, glowing orb; counts are real and computed in JS. */
+  .status-counter{
+    display:inline-block; max-width:860px; text-align:left;
     border:1.5px solid var(--line-strong); background:#FFFFFF;
-    color:var(--gold-bright); font-weight:800; letter-spacing:.18em; font-size:.78rem;
-    padding:9px 16px 9px 12px; border-radius:999px; text-transform:uppercase;
+    padding:14px 18px 12px; border-radius:16px; box-shadow:var(--shadow);
   }
-  .hero-badge i{width:9px;height:9px;border-radius:50%;background:var(--teal); display:block; box-shadow:0 0 0 6px rgba(11,107,94,.16); animation:pulseDot 2.2s ease-in-out infinite}
-  @keyframes pulseDot{0%,100%{transform:scale(1)} 50%{transform:scale(1.35)}}
+  .status-summary{margin:0 0 10px; font-size:1rem; color:var(--ink); font-weight:600; line-height:1.45}
+  .status-summary strong{font-size:1.25rem; color:var(--gold-bright)}
+  .status-list{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px 16px}
+  .status-item{display:inline-flex; align-items:center; gap:8px; font-size:.92rem; font-weight:700; color:var(--ink-soft); white-space:nowrap}
+  .status-item b{color:var(--ink); font-size:1.02rem}
+  .orb{width:12px; height:12px; flex:none; border-radius:50%; background:var(--orb,#78716C); box-shadow:0 0 8px 2px var(--orb-glow,rgba(120,113,108,.4)); animation:orbBreathe 2.8s ease-in-out infinite; animation-delay:var(--orb-delay,0s)}
+  @keyframes orbBreathe{0%,100%{transform:scale(1); box-shadow:0 0 6px 1px var(--orb-glow,rgba(120,113,108,.4))} 50%{transform:scale(1.28); box-shadow:0 0 16px 5px var(--orb-glow,rgba(120,113,108,.4))}}
+  .orb-shipped{--orb:#16A34A; --orb-glow:rgba(22,163,74,.45); --orb-delay:0s}
+  .orb-live{--orb:#7C3AED; --orb-glow:rgba(124,58,237,.45); --orb-delay:.35s}
+  .orb-done{--orb:#0F766E; --orb-glow:rgba(15,118,110,.45); --orb-delay:.7s}
+  .orb-progress{--orb:#2563EB; --orb-glow:rgba(37,99,235,.45); --orb-delay:1.05s}
+  .orb-parked{--orb:#78716C; --orb-glow:rgba(120,113,108,.4); --orb-delay:1.4s}
+  .orb-waiting{--orb:#D97706; --orb-glow:rgba(217,119,6,.5); --orb-delay:1.75s}
+  [data-theme="dark"] .orb-shipped{--orb:#4ADE80} [data-theme="dark"] .orb-live{--orb:#A78BFA}
+  [data-theme="dark"] .orb-done{--orb:#2DD4BF} [data-theme="dark"] .orb-progress{--orb:#60A5FA}
+  [data-theme="dark"] .orb-parked{--orb:#A8A29E} [data-theme="dark"] .orb-waiting{--orb:#FBBF24}
+  /* H1 — Century Schoolbook is the classic face of American legal
+     documents; Source Serif 4 is its open-licensed digital peer.
+     Heavy weight, tight authority. Fully opaque in both themes. */
   .wall-title{
-    font-family:"Kaushan Script", cursive;
-    font-size:clamp(3.4rem, 12.5vw, 8.2rem);
-    line-height:.92; margin:22px 0 0; color:var(--ink); letter-spacing:.01em; will-change:transform;
-    text-shadow:0 3px 0 rgba(255,255,255,.7), 0 10px 30px rgba(146,64,14,.16);
+    position:relative; isolation:isolate;
+    font-family:"Source Serif 4", "Century Schoolbook", "Bookman Old Style", Georgia, serif;
+    font-weight:900;
+    font-size:clamp(2.6rem, 8.6vw, 5.9rem);
+    line-height:1.02; margin:26px 0 0; color:var(--title-ink); letter-spacing:.005em;
+    text-shadow:0 2px 0 rgba(255,255,255,.55), 0 12px 32px rgba(146,64,14,.14);
   }
-  .wall-title .char{display:inline-block; animation:charIn .8s cubic-bezier(.22,.9,.28,1.2) both; animation-delay:calc(var(--i) * 55ms + 120ms);}
+  [data-theme="dark"] .wall-title{text-shadow:0 0 26px rgba(251,191,36,.14)}
+  /* Golden dry ice: a pooled mist behind the whole title, plus a wisp
+     behind EVERY letter that billows sideways and thins as it travels. */
+  .wall-title::before{
+    content:""; position:absolute; z-index:-2; left:50%; bottom:-.12em; width:108%; height:.85em;
+    transform:translateX(-50%);
+    background:radial-gradient(ellipse 50% 100% at 50% 50%, rgba(217,164,32,.34), rgba(217,164,32,.12) 52%, rgba(217,164,32,0) 78%);
+    filter:blur(14px); animation:mistPool 7s ease-in-out infinite alternate; pointer-events:none;
+  }
+  @keyframes mistPool{from{transform:translateX(-52%) scaleX(.94); opacity:.75} to{transform:translateX(-48%) scaleX(1.05); opacity:1}}
+  .wall-title .char{position:relative; display:inline-block; z-index:0; animation:charIn .8s cubic-bezier(.22,.9,.28,1.2) both; animation-delay:calc(var(--i) * 55ms + 120ms);}
+  .wall-title .char::before,.wall-title .char::after{
+    content:""; position:absolute; z-index:-1; left:50%; top:58%; width:1.7em; height:.95em; margin-left:-.85em; border-radius:50%;
+    background:radial-gradient(ellipse at center, rgba(245,197,66,.55), rgba(217,164,32,.20) 48%, rgba(217,164,32,0) 72%);
+    filter:blur(7px); opacity:0; pointer-events:none;
+  }
+  .wall-title .char::before{animation:mistOut 5.6s ease-out infinite; animation-delay:calc(var(--i) * .22s)}
+  .wall-title .char::after{animation:mistOutAlt 7.2s ease-out infinite; animation-delay:calc(var(--i) * .22s + 1.4s)}
+  @keyframes mistOut{0%{transform:translate(0,0) scale(.55); opacity:0} 18%{opacity:.85} 62%{opacity:.32} 100%{transform:translate(var(--drift,16px),.14em) scale(1.65); opacity:0}}
+  @keyframes mistOutAlt{0%{transform:translate(0,0) scale(.45); opacity:0} 20%{opacity:.6} 100%{transform:translate(calc(var(--drift,16px) * -.7),.2em) scale(1.35); opacity:0}}
   .wall-title .word{display:inline-block; white-space:nowrap}
   @keyframes charIn{from{opacity:0; transform:translateY(.45em) rotate(-4deg) scale(.92)} to{opacity:1; transform:translateY(0) rotate(0) scale(1)}}
   .header-line{margin:28px auto 0; max-width:760px; font-size:clamp(1.3rem, 3.6vw, 1.85rem); font-weight:700; line-height:1.42; color:var(--ink); min-height:2.84em;}
@@ -145,10 +289,12 @@
   .rule{width:88px; height:4px; border-radius:99px; background:linear-gradient(90deg,var(--gold-deep),var(--teal)); margin:36px auto 0;}
 
   .seal{position:absolute; right:2%; top:64px; width:112px; height:112px; z-index:2; animation:spinSeal 22s linear infinite; opacity:.95}
+  [data-theme="dark"] .seal text{fill:#FCD34D}
+  [data-theme="dark"] .seal circle{stroke:#9A917E}
   @keyframes spinSeal{to{transform:rotate(360deg)}}
   @media (max-width:760px){ .seal{display:none} }
 
-  /* ============ THE WORKING WALL: decor that does a job ============ */
+  /* ============ WIDGET SHOWCASE: decor that does a job ============ */
   .workwall{margin:44px auto 0; max-width:960px}
   .workwall-head{text-align:center; margin:0 0 18px}
   .workwall-head h2{margin:0; font-size:.95rem; font-weight:800; letter-spacing:.18em; color:var(--gold-bright)}
@@ -335,13 +481,17 @@
     .seal{animation:none !important}
     .marquee-track{animation:none !important; flex-wrap:wrap; width:auto}
     .card .beam{animation:none !important}
+    .orb{animation:none !important}
+    .wall-title::before, .wall-title .char::before, .wall-title .char::after{animation:none !important; opacity:0 !important}
     .wall-title .char{animation:none !important}
     .hand-sec{transition:none !important}
     .stat::after, .section-title::after{transform:scaleX(1) !important; transition:none !important}
   }
   @media (forced-colors: active){
-    .blob, .grain, #lantern, .card .beam, .card-index, .card .sheen, .marquee, .spotlights, .seal, .track-rail, .lamp, .level-bubble{display:none !important}
-    .card, .stat, .about, .a11y-note, .filter-dock, .instrument, .plan{border:1px solid CanvasText}
+    .blob, .grain, #lantern, .card .beam, .card-index, .card .sheen, .marquee, .spotlights, .seal, .fixture, .level-bubble, .orb, .wall-title::before{display:none !important}
+    .card, .stat, .about, .a11y-note, .filter-dock, .instrument, .plan, .sticky-nav, .status-counter{border:1px solid CanvasText}
+    .theme-switch{border:2px solid ButtonText}
+    .theme-switch .knob{background:ButtonText}
     .pill{border:1px solid CanvasText; forced-color-adjust:none}
     .info-btn{border:2px solid ButtonText}
     #wcagTip{border:1.5px solid CanvasText}
@@ -370,7 +520,7 @@ body.ats-locked{overflow:hidden}
 </style>
 <div id="ats-gate" role="dialog" aria-modal="true" aria-labelledby="ats-gate-title">
   <div class="ats-gate-card">
-    <h1 id="ats-gate-title">Audit Trial Studio</h1>
+    <h1 id="ats-gate-title">Audit Trail Interactive</h1>
     <p>This exhibition is still being hung. Enter the password to come in.</p>
     <form id="ats-gate-form" novalidate>
       <label for="ats-gate-input">Password</label>
@@ -390,23 +540,58 @@ body.ats-locked{overflow:hidden}
 <div id="wcagTip" role="tooltip" hidden></div>
 
 <div class="wrap">
+  <nav class="sticky-nav" aria-label="Site">
+    <span class="nav-brand">Audit Trail Interactive</span>
+    <span class="nav-spacer" aria-hidden="true"></span>
+    <span class="mini-clock">
+      <span class="mini-face" aria-hidden="true">
+        <span class="hand mini-hand-hour" id="miniHandHour"></span>
+        <span class="hand mini-hand-min" id="miniHandMin"></span>
+        <span class="hand mini-hand-sec" id="miniHandSec"></span>
+        <span class="mini-pin"></span>
+      </span>
+      <span class="mini-time"><time id="miniClockTime" datetime="">--:--</time></span>
+      <span class="mini-date" id="miniClockDate"></span>
+    </span>
+    <span class="theme-switch-wrap">
+      <span class="theme-switch-label" id="themeSwitchLabel">Theme</span>
+      <button type="button" class="theme-switch" id="themeSwitch" role="switch" aria-checked="false" aria-labelledby="themeSwitchLabel themeState"><span class="knob" aria-hidden="true"></span></button>
+      <span class="theme-state" id="themeState">Light</span>
+    </span>
+  </nav>
+
   <header class="top" id="top-section">
     <div class="spotlights" aria-hidden="true"><div class="spot spot-l"></div><div class="spot spot-c"></div><div class="spot spot-r"></div></div>
-    <div class="track-rail" aria-hidden="true"><span class="lamp lamp-l"></span><span class="lamp lamp-c"></span><span class="lamp lamp-r"></span></div>
+    <div class="fixture" aria-hidden="true">
+      <div class="fixture-rail"></div>
+      <div class="fixture-head fixture-head-l"><span class="fixture-disc"></span><span class="fixture-lens"></span></div>
+      <div class="fixture-head fixture-head-c"><span class="fixture-disc"></span><span class="fixture-lens"></span></div>
+      <div class="fixture-head fixture-head-r"><span class="fixture-disc"></span><span class="fixture-lens"></span></div>
+    </div>
     <svg class="seal" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
       <defs><path id="sealCircle" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
       <circle cx="60" cy="60" r="58" fill="none" stroke="#6B6252" stroke-width="1.5"/>
       <circle cx="60" cy="60" r="30" fill="none" stroke="#92400E" stroke-width="1.5"/>
-      <text fill="#7C3F00" font-size="10.5" font-weight="700" letter-spacing="3.5"><textPath href="#sealCircle">AUDIT • TRIAL • STUDIO • </textPath></text>
-      <text x="60" y="66" text-anchor="middle" fill="#1B1710" font-size="13" font-weight="800">ATS</text>
+      <text fill="#7C3F00" font-size="9" font-weight="700" letter-spacing="2.6"><textPath href="#sealCircle">AUDIT • TRAIL • INTERACTIVE • </textPath></text>
+      <text x="60" y="66" text-anchor="middle" fill="#1B1710" font-size="13" font-weight="800">ATI</text>
     </svg>
-    <p class="hero-badge"><i aria-hidden="true"></i> Now showing — Sept to Nov 2026</p>
-    <h1 class="wall-title">Audit Trial Studio</h1>
+    <div class="status-counter" role="group" aria-label="Project status counter">
+      <p class="status-summary"><strong id="completedCount">17</strong> of <span id="totalCount">26</span> projects completed. The rest are moving, parked by choice, or waiting on a decision.</p>
+      <ul class="status-list">
+        <li class="status-item"><span class="orb orb-shipped" aria-hidden="true"></span><b data-status-count="shipped">3</b> Shipped</li>
+        <li class="status-item"><span class="orb orb-live" aria-hidden="true"></span><b data-status-count="live">10</b> Live</li>
+        <li class="status-item"><span class="orb orb-done" aria-hidden="true"></span><b data-status-count="done">4</b> Done</li>
+        <li class="status-item"><span class="orb orb-progress" aria-hidden="true"></span><b data-status-count="progress">4</b> In Progress</li>
+        <li class="status-item"><span class="orb orb-parked" aria-hidden="true"></span><b data-status-count="parked">2</b> Parked</li>
+        <li class="status-item"><span class="orb orb-waiting" aria-hidden="true"></span><b data-status-count="waiting">3</b> Waiting on You</li>
+      </ul>
+    </div>
+    <h1 class="wall-title">Audit Trail Interactive</h1>
     <p class="header-line">
-      <span class="visually-hidden">Tools tell you what to do next. A wall tells you who you've already been.</span>
-      <span id="typeTarget" aria-hidden="true">Tools tell you what to do next. A wall tells you who you've already been.</span>
+      <span class="visually-hidden">Your website is losing people in silence. I find every reason, name it in plain English, and hand you the fix.</span>
+      <span id="typeTarget" aria-hidden="true">Your website is losing people in silence. I find every reason, name it in plain English, and hand you the fix.</span>
     </p>
-    <p class="sub-line">September to November 2026, the work so far. Hung in order, lit like it matters.</p>
+    <p class="sub-line">Do not take my word for it. The outcomes are hanging below, September to November 2026, and the wall is still growing.</p>
     <div class="hero-cta">
       <a class="cta-primary" href="#exhibition">Enter the exhibition ↓</a>
       <a class="cta-ghost" href="#about-heading">How this was made</a>
@@ -418,8 +603,8 @@ body.ats-locked{overflow:hidden}
 
     <section class="workwall" aria-labelledby="workwall-heading">
       <div class="workwall-head">
-        <h2 id="workwall-heading">THE WORKING WALL</h2>
-        <p>Nothing here is set dressing. Every object on this wall does a real job. Tap the small <strong>i</strong> on each one to see why it passes WCAG.</p>
+        <h2 id="workwall-heading">WIDGET SHOWCASE</h2>
+        <p>Nothing here is set dressing. Every widget in this showcase does a real job. Tap the small <strong>i</strong> on each one to see why it passes WCAG.</p>
       </div>
       <div class="workwall-grid">
 
@@ -428,7 +613,7 @@ body.ats-locked{overflow:hidden}
             <h3 class="grow">Gallery clock</h3>
             <button type="button" class="info-btn" data-tip-title="Why the clock passes" data-tip="The clock keeps real local time, but the time is never trapped in the picture. The same time is written out as text next to the hands and updates every second, so nobody has to read hand positions to get it. That is WCAG 1.1.1 (text alternative for non-text content) and 1.3.1 (information available in text, not by shape or position alone). The hands and rim are decoration-deep colours on a near-white face, well past the 3:1 non-text contrast bar in 1.4.11." aria-label="Why the gallery clock passes WCAG">i</button>
           </div>
-          <p class="inst-note">A real clock, on the wall, keeping your local time.</p>
+          <p class="inst-note">A real clock, on the wall, keeping your local time. Its mini counterpart rides in the sticky nav at the top, so the time is still helping after you scroll, and it glows when the Dark theme is on.</p>
           <div class="inst-body clock-wrap">
             <div class="clock-face" aria-hidden="true">
               <span class="clock-tick" style="transform:rotate(0deg) translateY(-52px)"></span>
@@ -453,7 +638,7 @@ body.ats-locked{overflow:hidden}
             <h3 class="grow">Track lights — working dimmers</h3>
             <button type="button" class="info-btn" data-tip-title="Why the dimmers pass" data-tip="These sliders really dim the three lamps on the rail above the title. They are native range inputs with a visible text label and a percentage readout each, so the setting is never carried by brightness alone — that covers WCAG 1.3.1 and 1.4.1 (not colour or sensation only). Each slider is keyboard-operable with the arrow keys (2.1.1), shows the blue focus outline (2.4.7), and its thumb is 30px with a 44px tall control row, clearing the 24px target minimum in 2.5.8. Dimming the lamps never dims any text, so reading contrast in 1.4.3 is untouched." aria-label="Why the track light dimmers pass WCAG">i</button>
           </div>
-          <p class="inst-note">Slide them and watch the lamps above the title change.</p>
+          <p class="inst-note">Slide them and watch the fixture above the title change. With the Light / Dark switch in the top bar setting the two extremes, these dimmers dial in every shade in between.</p>
           <div class="inst-body">
             <div class="dimmer-row">
               <label for="dimL">Left lamp</label>
@@ -501,7 +686,7 @@ body.ats-locked{overflow:hidden}
           <p class="inst-note">A map of this page. Press a room to go there.</p>
           <div class="inst-body">
             <div class="plan">
-              <button type="button" class="plan-room" data-goto="top-section">Entrance<small>Title &amp; track lights</small></button>
+              <button type="button" class="plan-room" data-goto="top-section">Entrance<small>Title &amp; light fixture</small></button>
               <button type="button" class="plan-room" data-goto="about-heading">About<small>How this was made</small></button>
               <button type="button" class="plan-room wide" data-goto="exhibition">Exhibition<small>All 26 pieces, filterable</small></button>
               <button type="button" class="plan-room wide" data-goto="a11y-heading">Accessibility<small>The standard &amp; the quiz</small></button>
@@ -513,12 +698,12 @@ body.ats-locked{overflow:hidden}
     </section>
 
     <section class="about" aria-labelledby="about-heading">
-      <h2 id="about-heading" tabindex="-1">ABOUT THIS STUDIO</h2>
+      <h2 id="about-heading" tabindex="-1">ABOUT AUDIT TRAIL INTERACTIVE</h2>
       <p><strong>Every piece on this wall was built with AI assistance, openly, on purpose.</strong></p>
       <p>The output is only this fast, and only this good, because the person directing it has a professional and educational background in web development. The tools are new. The judgment behind them is not.</p>
     </section>
 
-    <section class="stats" id="stats" aria-label="Audit Trial Studio at a glance">
+    <section class="stats" id="stats" aria-label="Audit Trail Interactive at a glance">
       <div class="stat"><div class="stat-num" data-stat="total" data-count="26">26</div><div class="stat-label">Pieces on the wall</div></div>
       <div class="stat"><div class="stat-num" data-stat="shippedLive" data-count="13">13</div><div class="stat-label">Shipped or live</div></div>
       <div class="stat"><div class="stat-num" data-stat="months" data-count="2">2</div><div class="stat-label">Months covered</div></div>
@@ -711,9 +896,11 @@ body.ats-locked{overflow:hidden}
   }
   function bindAllInfo(scope){ Array.prototype.slice.call((scope||document).querySelectorAll(".info-btn")).forEach(function(b){ if (!b.__tipBound) { b.__tipBound = true; bindInfo(b); } }); }
 
-  /* ---------- Wall clock (real local time, text + hands) ---------- */
+  /* ---------- Wall clock + its sticky-nav mini counterpart ---------- */
   var handHour = document.getElementById("handHour"), handMin = document.getElementById("handMin"), handSec = document.getElementById("handSec");
   var clockTime = document.getElementById("clockTime"), clockDate = document.getElementById("clockDate"), clockTz = document.getElementById("clockTz");
+  var miniHour = document.getElementById("miniHandHour"), miniMin = document.getElementById("miniHandMin"), miniSec = document.getElementById("miniHandSec");
+  var miniTime = document.getElementById("miniClockTime"), miniDate = document.getElementById("miniClockDate");
   function tickClock(){
     var now = new Date();
     var s = now.getSeconds() + now.getMilliseconds()/1000;
@@ -722,11 +909,20 @@ body.ats-locked{overflow:hidden}
     if (handSec) handSec.style.transform = "rotate(" + (s*6) + "deg)";
     if (handMin) handMin.style.transform = "rotate(" + (m*6) + "deg)";
     if (handHour) handHour.style.transform = "rotate(" + (h*30) + "deg)";
+    if (miniSec) miniSec.style.transform = "rotate(" + (s*6) + "deg)";
+    if (miniMin) miniMin.style.transform = "rotate(" + (m*6) + "deg)";
+    if (miniHour) miniHour.style.transform = "rotate(" + (h*30) + "deg)";
     if (clockTime) {
       clockTime.textContent = now.toLocaleTimeString([], { hour:"numeric", minute:"2-digit", second:"2-digit" });
       clockTime.setAttribute("datetime", now.toISOString());
     }
-    if (clockDate) clockDate.textContent = now.toLocaleDateString([], { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+    if (miniTime) {
+      miniTime.textContent = now.toLocaleTimeString([], { hour:"numeric", minute:"2-digit" });
+      miniTime.setAttribute("datetime", now.toISOString());
+    }
+    var dateText = now.toLocaleDateString([], { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+    if (clockDate) clockDate.textContent = dateText;
+    if (miniDate) miniDate.textContent = now.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
   }
   if (clockTz) { try { clockTz.textContent = "Your local time · " + Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g," "); } catch(e){ clockTz.textContent = "Your local time"; } }
   tickClock();
@@ -769,12 +965,41 @@ body.ats-locked{overflow:hidden}
     });
   });
 
-  /* ---------- Hero title split ---------- */
+  /* ---------- Theme switch: Light (inactive, default) / Dark (active).
+     Two absolutes; the three dimmers interpolate the lighting between
+     them. In-memory only for this visit; the page always opens Light. ---------- */
+  var themeSwitch = document.getElementById("themeSwitch"), themeState = document.getElementById("themeState");
+  if (themeSwitch) {
+    themeSwitch.addEventListener("click", function(){
+      var dark = document.documentElement.getAttribute("data-theme") !== "dark";
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      themeSwitch.setAttribute("aria-checked", dark ? "true" : "false");
+      if (themeState) themeState.textContent = dark ? "Dark" : "Light";
+    });
+  }
+
+  /* ---------- Status counter: counts are computed, never hand-typed ---------- */
+  (function(){
+    var byStatus = {};
+    WALL_PIECES.forEach(function(p){ byStatus[p.status] = (byStatus[p.status] || 0) + 1; });
+    Object.keys(byStatus).forEach(function(key){
+      var el = document.querySelector('[data-status-count="' + key + '"]');
+      if (el) el.textContent = byStatus[key];
+    });
+    var completed = (byStatus.shipped || 0) + (byStatus.live || 0) + (byStatus.done || 0);
+    var cc = document.getElementById("completedCount"); if (cc) cc.textContent = completed;
+    var tc = document.getElementById("totalCount"); if (tc) tc.textContent = WALL_PIECES.length;
+  })();
+
+  /* ---------- Hero title split: per-letter golden dry-ice wisps.
+     Each letter gets a --drift: letters left of centre billow left,
+     letters right of centre billow right, further the further out. ---------- */
   var wallTitle = document.querySelector(".wall-title");
   if (wallTitle && !reduced) {
     var titleText = wallTitle.textContent.trim();
     wallTitle.setAttribute("aria-label", titleText);
     wallTitle.textContent = "";
+    var totalChars = titleText.replace(/ /g, "").length;
     var charIdx = 0;
     titleText.split(" ").forEach(function(word, wIdx, words){
       var w = document.createElement("span");
@@ -782,7 +1007,11 @@ body.ats-locked{overflow:hidden}
       word.split("").forEach(function(ch){
         var s = document.createElement("span");
         s.className = "char"; s.setAttribute("aria-hidden", "true");
-        s.style.setProperty("--i", charIdx++); s.textContent = ch; w.appendChild(s);
+        s.style.setProperty("--i", charIdx);
+        var centreOffset = totalChars > 1 ? (charIdx / (totalChars - 1)) * 2 - 1 : 0;
+        s.style.setProperty("--drift", Math.round(centreOffset * 34) + "px");
+        charIdx++;
+        s.textContent = ch; w.appendChild(s);
       });
       wallTitle.appendChild(w);
       if (wIdx < words.length - 1) wallTitle.appendChild(document.createTextNode(" "));
@@ -906,11 +1135,8 @@ body.ats-locked{overflow:hidden}
       b.addEventListener("pointermove", function(ev){ var r = b.getBoundingClientRect(); var dx = (ev.clientX - (r.left + r.width / 2)) / r.width; var dy = (ev.clientY - (r.top + r.height / 2)) / r.height; b.style.transform = "translate(" + (dx * 7).toFixed(1) + "px," + (dy * 5).toFixed(1) + "px)"; });
       b.addEventListener("pointerleave", function(){ b.style.transform = ""; });
     });
-    if (wallTitle) {
-      var hero = document.querySelector("header.top");
-      hero.addEventListener("pointermove", function(ev){ var r = hero.getBoundingClientRect(); var dx = (ev.clientX - (r.left + r.width / 2)) / r.width; var dy = (ev.clientY - (r.top + r.height / 2)) / r.height; wallTitle.style.transform = "translate(" + (dx * 8).toFixed(1) + "px," + (dy * 5).toFixed(1) + "px)"; });
-      hero.addEventListener("pointerleave", function(){ wallTitle.style.transform = ""; });
-    }
+    /* The H1 deliberately does NOT follow the cursor. It stands still,
+       like a name on a legal document should; only its golden mist moves. */
   }
 
   /* ---------- Parallax blobs + back to top ---------- */
