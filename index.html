@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Audit Trial Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F2E7;
+    --bg-2:#EFE7D3;
+    --card:#FFFFFF;
+    --card-2:#FFFDF6;
+    --ink:#1B1710;          /* on --bg ~14.8:1, on white ~15.9:1 */
+    --ink-soft:#2E2A22;     /* on white ~13.4:1 */
+    --ink-faint:#4A453B;    /* on white ~9.2:1, on --bg ~8.3:1 */
+    --gold:#D97706;
+    --gold-bright:#7C3F00;  /* small text on light: ~7.6:1 on white */
+    --gold-deep:#92400E;
+    --teal:#0B6B5E;         /* on white ~6.3:1 */
+    --violet:#5B21B6;
+    --line:#D9CFB8;
+    --line-strong:#6B6252;
+    --focus:#0047C7;        /* on light bg ~7.4:1 */
+    --tip-bg:#1B1710;
+    --shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 14px 34px rgba(84,60,8,.12);
+    --shadow-hover:0 1px 0 rgba(255,255,255,.8) inset, 0 22px 46px rgba(84,60,8,.18), 0 0 0 1px rgba(146,64,14,.22);
+    --radius:20px;
+    --sl:.7; --sc:.85; --sr:.6;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Lexend", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size:17px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; position:relative;
+    background-image:
+      radial-gradient(900px 500px at 50% -80px, rgba(217,119,6,.13), transparent 65%),
+      radial-gradient(700px 500px at 90% 30%, rgba(11,107,94,.07), transparent 60%),
+      radial-gradient(800px 600px at 5% 70%, rgba(91,33,182,.06), transparent 60%),
+      linear-gradient(180deg,#FDF9EF 0%, var(--bg) 420px);
+  }
+  button{font-family:inherit; min-height:44px; min-width:44px}
+  input[type="range"]{min-height:44px}
+  :focus-visible{ outline:3px solid var(--focus); outline-offset:3px; border-radius:4px; }
+  .visually-hidden{position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;}
+  .skip-link{position:absolute; left:16px; top:-90px; z-index:100; background:var(--gold-deep); color:#FFF7E0; padding:12px 22px; border-radius:0 0 12px 12px; font-weight:800; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;}
+  .skip-link:focus{ top:0; color:#FFF7E0; }
+  #main-content:focus{ outline:none; }
+  #progress{position:fixed; top:0; left:0; height:4px; width:0%; background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--teal)); z-index:80; pointer-events:none; box-shadow:0 0 10px rgba(217,119,6,.45)}
+  ::selection{background:#FBBF24; color:#1A1400}
+
+  .grain{position:fixed; inset:-50%; width:200%; height:200%; z-index:55; pointer-events:none; opacity:.035; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E"); animation:grainShift 9s steps(6) infinite;}
+  @keyframes grainShift{0%,100%{transform:translate(0,0)} 20%{transform:translate(-2%,1%)} 40%{transform:translate(1%,-2%)} 60%{transform:translate(-1%,2%)} 80%{transform:translate(2%,-1%)}}
+
+  #lantern{position:fixed; left:0; top:0; width:640px; height:640px; margin:-320px 0 0 -320px; border-radius:50%; background:radial-gradient(circle, rgba(217,119,6,.16) 0%, rgba(217,119,6,.05) 42%, rgba(217,119,6,0) 68%); z-index:0; pointer-events:none; opacity:0; transition:opacity .6s ease; will-change:transform;}
+  #lantern.on{opacity:1}
+  @property --beam-a { syntax:"<angle>"; initial-value:0deg; inherits:false; }
+
+  /* Spotlights in hero — driven by the track-light dimmers */
+  .spotlights{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0}
+  .spot{position:absolute; top:-120px; width:340px; height:620px; background:linear-gradient(180deg, rgba(245,158,11,.34), rgba(245,158,11,0) 72%); clip-path:polygon(42% 0,58% 0,100% 100%,0 100%); filter:blur(6px); transform-origin:top center;}
+  .spot-l{left:6%; transform:rotate(14deg); opacity:var(--sl); animation:swayL 11s ease-in-out infinite alternate}
+  .spot-c{left:50%; margin-left:-170px; transform:rotate(0deg); opacity:var(--sc); background:linear-gradient(180deg, rgba(251,191,36,.36), rgba(251,191,36,0) 72%)}
+  .spot-r{right:6%; transform:rotate(-14deg); opacity:var(--sr); animation:swayR 13s ease-in-out infinite alternate; background:linear-gradient(180deg, rgba(11,107,94,.20), rgba(11,107,94,0) 72%)}
+  @keyframes swayL{from{transform:rotate(10deg)} to{transform:rotate(18deg)}}
+  @keyframes swayR{from{transform:rotate(-10deg)} to{transform:rotate(-18deg)}}
+
+  .blobs{position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none}
+  .blob{position:absolute; border-radius:50%; filter:blur(90px); opacity:.22; will-change:transform}
+  .blob-a{width:520px;height:520px; left:-140px; top:10%; background:#F59E0B; animation:driftA 36s ease-in-out infinite alternate}
+  .blob-b{width:460px;height:460px; right:-120px; top:32%; background:#A78BFA; animation:driftB 44s ease-in-out infinite alternate}
+  .blob-c{width:420px;height:420px; left:28%; bottom:-180px; background:#2DD4BF; animation:driftA 52s ease-in-out infinite alternate-reverse}
+  @keyframes driftA{from{transform:translate(0,0) scale(1)} to{transform:translate(70px,50px) scale(1.08)}}
+  @keyframes driftB{from{transform:translate(0,0) scale(1.05)} to{transform:translate(-60px,70px) scale(.96)}}
+
+  .wrap{position:relative; z-index:1; max-width:1120px; margin:0 auto; padding:0 22px 48px}
+
+  /* ============ INFO TOOLTIP SYSTEM ============ */
+  .info-btn{
+    position:relative; flex:none; width:36px; height:36px; min-width:36px; min-height:36px;
+    border-radius:50%; border:2px solid var(--ink); background:var(--tip-bg); color:#FFFBEB;
+    font-size:.95rem; font-weight:800; font-style:italic; line-height:1; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; padding:0;
+    box-shadow:0 3px 10px rgba(27,23,16,.28);
+  }
+  .info-btn::after{content:""; position:absolute; inset:-6px; border-radius:50%;} /* 48px hit area */
+  .info-btn:hover{background:var(--gold-deep); border-color:var(--gold-deep)}
+  #wcagTip{
+    position:fixed; z-index:95; max-width:min(320px, calc(100vw - 24px)); width:max-content;
+    background:var(--tip-bg); color:#FFFBEB; border:1.5px solid #FBBF24; border-radius:12px;
+    padding:12px 14px; font-size:.92rem; line-height:1.55; font-weight:500;
+    box-shadow:0 18px 44px rgba(27,23,16,.35); pointer-events:auto;
+  }
+  #wcagTip[hidden]{display:none}
+  #wcagTip strong{color:#FCD34D; display:block; margin-bottom:3px; font-size:.86rem; letter-spacing:.06em; text-transform:uppercase}
+  .info-row{display:flex; align-items:center; gap:10px}
+  .info-row .grow{flex:1}
+
+  /* HERO */
+  header.top{ position:relative; text-align:center; padding:58px 10px 8px; isolation:isolate; }
+
+  /* Track-light rail: a real rail screwed to the top of the wall */
+  .track-rail{position:relative; z-index:2; max-width:760px; margin:0 auto 26px; height:14px; border-radius:7px; background:linear-gradient(180deg,#3F3A30,#1B1710); box-shadow:0 4px 10px rgba(27,23,16,.35), 0 1px 0 rgba(255,255,255,.5);}
+  .track-rail::before,.track-rail::after{content:""; position:absolute; top:3px; width:8px; height:8px; border-radius:50%; background:#C9BFA3; box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+  .track-rail::before{left:14px}.track-rail::after{right:14px}
+  .lamp{position:absolute; top:12px; width:34px; height:30px; margin-left:-17px; background:linear-gradient(180deg,#57534E,#1B1710); border-radius:6px 6px 14px 14px; box-shadow:0 6px 12px rgba(27,23,16,.3)}
+  .lamp::after{content:""; position:absolute; left:6px; right:6px; bottom:3px; height:7px; border-radius:50%; background:#FDE68A; box-shadow:0 0 14px 4px rgba(251,191,36,.55)}
+  .lamp-l{left:16%}.lamp-c{left:50%}.lamp-r{left:84%}
+
+  .hero-badge{
+    display:inline-flex; align-items:center; gap:10px;
+    border:1.5px solid var(--line-strong); background:#FFFFFF;
+    color:var(--gold-bright); font-weight:800; letter-spacing:.18em; font-size:.78rem;
+    padding:9px 16px 9px 12px; border-radius:999px; text-transform:uppercase;
+  }
+  .hero-badge i{width:9px;height:9px;border-radius:50%;background:var(--teal); display:block; box-shadow:0 0 0 6px rgba(11,107,94,.16); animation:pulseDot 2.2s ease-in-out infinite}
+  @keyframes pulseDot{0%,100%{transform:scale(1)} 50%{transform:scale(1.35)}}
+  .wall-title{
+    font-family:"Kaushan Script", cursive;
+    font-size:clamp(3.4rem, 12.5vw, 8.2rem);
+    line-height:.92; margin:22px 0 0; color:var(--ink); letter-spacing:.01em; will-change:transform;
+    text-shadow:0 3px 0 rgba(255,255,255,.7), 0 10px 30px rgba(146,64,14,.16);
+  }
+  .wall-title .char{display:inline-block; animation:charIn .8s cubic-bezier(.22,.9,.28,1.2) both; animation-delay:calc(var(--i) * 55ms + 120ms);}
+  .wall-title .word{display:inline-block; white-space:nowrap}
+  @keyframes charIn{from{opacity:0; transform:translateY(.45em) rotate(-4deg) scale(.92)} to{opacity:1; transform:translateY(0) rotate(0) scale(1)}}
+  .header-line{margin:28px auto 0; max-width:760px; font-size:clamp(1.3rem, 3.6vw, 1.85rem); font-weight:700; line-height:1.42; color:var(--ink); min-height:2.84em;}
+  .type-cursor{display:inline-block; width:3px; height:1em; margin-left:3px; background:var(--gold-deep); vertical-align:-.12em; animation:blink 1s steps(1) infinite;}
+  @keyframes blink{0%,55%{opacity:1} 56%,100%{opacity:0}}
+  .sub-line{margin:12px auto 0; font-size:1.08rem; color:var(--ink-faint); font-weight:600; letter-spacing:.02em}
+  .hero-cta{margin:28px auto 0; display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+  .hero-cta a{
+    display:inline-flex; align-items:center; justify-content:center; min-height:52px; padding:12px 22px; border-radius:999px; font-weight:800; text-decoration:none; font-size:1rem;
+  }
+  .cta-primary{background:#FBBF24; color:#1A1400; border:1.5px solid #92400E; box-shadow:0 10px 24px rgba(146,64,14,.22)}
+  .cta-primary:hover{background:#FCD34D}
+  .cta-ghost{background:#FFFFFF; color:var(--ink); border:1.5px solid var(--line-strong)}
+  .cta-ghost:hover{border-color:var(--gold-deep); color:var(--gold-bright)}
+  .rule{width:88px; height:4px; border-radius:99px; background:linear-gradient(90deg,var(--gold-deep),var(--teal)); margin:36px auto 0;}
+
+  .seal{position:absolute; right:2%; top:64px; width:112px; height:112px; z-index:2; animation:spinSeal 22s linear infinite; opacity:.95}
+  @keyframes spinSeal{to{transform:rotate(360deg)}}
+  @media (max-width:760px){ .seal{display:none} }
+
+  /* ============ THE WORKING WALL: decor that does a job ============ */
+  .workwall{margin:44px auto 0; max-width:960px}
+  .workwall-head{text-align:center; margin:0 0 18px}
+  .workwall-head h2{margin:0; font-size:.95rem; font-weight:800; letter-spacing:.18em; color:var(--gold-bright)}
+  .workwall-head p{margin:8px auto 0; max-width:600px; color:var(--ink-faint); font-weight:600; font-size:1rem}
+  .workwall-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  @media (max-width:720px){ .workwall-grid{grid-template-columns:1fr} }
+  .instrument{
+    background:linear-gradient(180deg,var(--card-2),var(--card)); border:1px solid var(--line);
+    border-radius:var(--radius); box-shadow:var(--shadow); padding:22px 22px 20px; position:relative;
+  }
+  .instrument h3{margin:0; font-size:1.12rem; font-weight:800; color:var(--ink)}
+  .instrument .inst-note{margin:4px 0 0; color:var(--ink-faint); font-size:.95rem; font-weight:600; line-height:1.5}
+  .inst-body{margin-top:16px}
+
+  /* Wall clock */
+  .clock-wrap{display:flex; align-items:center; gap:20px; flex-wrap:wrap}
+  .clock-face{width:132px; height:132px; flex:none; border-radius:50%; background:#FFFDF6; border:7px solid #A8842F; box-shadow:inset 0 0 0 2px #E7DCBE, inset 0 4px 14px rgba(84,60,8,.18), 0 10px 22px rgba(84,60,8,.2); position:relative}
+  .clock-face .hand{position:absolute; left:50%; bottom:50%; transform-origin:50% 100%; border-radius:99px; background:#1B1710}
+  .hand-hour{width:6px; height:34px; margin-left:-3px}
+  .hand-min{width:4px; height:50px; margin-left:-2px}
+  .hand-sec{width:2px; height:56px; margin-left:-1px; background:#B91C1C}
+  .clock-pin{position:absolute; left:50%; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:#92400E; border:2px solid #FFFDF6}
+  .clock-tick{position:absolute; left:50%; top:50%; width:3px; height:9px; margin-left:-1.5px; background:#57534E; border-radius:2px}
+  .clock-readout{font-size:1.05rem; color:var(--ink-soft); line-height:1.55}
+  .clock-readout strong{display:block; font-size:1.5rem; color:var(--ink); letter-spacing:.01em}
+  .clock-readout .tz{color:var(--ink-faint); font-weight:600; font-size:.95rem}
+
+  /* Dimmers */
+  .dimmer-row{display:grid; grid-template-columns:86px 1fr 48px; align-items:center; gap:10px; margin-bottom:6px}
+  .dimmer-row label{font-weight:700; font-size:.95rem; color:var(--ink-soft)}
+  .dimmer-row output{font-weight:800; color:var(--gold-bright); text-align:right; font-size:.95rem}
+  input[type="range"]{ -webkit-appearance:none; appearance:none; width:100%; background:transparent; cursor:pointer; padding:0; }
+  input[type="range"]::-webkit-slider-runnable-track{height:10px; border-radius:99px; background:linear-gradient(90deg,#FDE68A,#F59E0B); border:1px solid #92400E}
+  input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:30px; height:30px; margin-top:-11px; border-radius:50%; background:#1B1710; border:3px solid #FBBF24; box-shadow:0 3px 8px rgba(27,23,16,.35)}
+  input[type="range"]::-moz-range-track{height:10px; border-radius:99px; background:linear-gradient(90deg,#FDE68A,#F59E0B); border:1px solid #92400E}
+  input[type="range"]::-moz-range-thumb{width:26px; height:26px; border-radius:50%; background:#1B1710; border:3px solid #FBBF24; box-shadow:0 3px 8px rgba(27,23,16,.35)}
+
+  /* Spirit level */
+  .level-body{background:linear-gradient(180deg,#FCD34D,#F59E0B); border:2px solid #92400E; border-radius:14px; padding:16px 16px 12px; box-shadow:inset 0 2px 0 rgba(255,255,255,.55), 0 8px 18px rgba(84,60,8,.2)}
+  .level-vial{position:relative; height:44px; border-radius:99px; background:#ECFCCB; border:2px solid #3F6212; overflow:hidden; box-shadow:inset 0 3px 8px rgba(63,98,18,.3)}
+  .level-vial::before,.level-vial::after{content:""; position:absolute; top:0; bottom:0; width:2px; background:#3F6212}
+  .level-vial::before{left:calc(50% - 26px)} .level-vial::after{left:calc(50% + 24px)}
+  .level-bubble{position:absolute; top:5px; left:50%; width:48px; height:30px; margin-left:-24px; border-radius:99px; background:rgba(255,255,255,.75); border:2px solid #65A30D; will-change:transform}
+  .level-marks{display:flex; justify-content:space-between; font-size:.8rem; font-weight:800; color:#451A03; margin-top:6px; letter-spacing:.04em}
+  .level-readout{margin:12px 0 2px; font-weight:700; color:var(--ink-soft); font-size:1rem; min-height:1.6em}
+  .level-readout strong{color:var(--ink)}
+
+  /* Floor plan */
+  .plan{border:2.5px solid var(--ink); border-radius:10px; background:#FFFDF6; padding:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px; box-shadow:inset 0 0 0 4px #EFE7D3}
+  .plan-room{
+    min-height:64px; border:2px dashed #6B6252; border-radius:6px; background:#FFFFFF; color:var(--ink);
+    font-weight:800; font-size:.95rem; cursor:pointer; padding:10px 8px; line-height:1.3;
+  }
+  .plan-room small{display:block; font-weight:600; color:var(--ink-faint); font-size:.8rem; margin-top:2px}
+  .plan-room:hover{border-style:solid; border-color:var(--gold-deep); background:#FFFBEB}
+  .plan-room.wide{grid-column:span 2}
+
+  /* Brass plaque treatment for About */
+  .about{margin:40px auto 0; max-width:760px; text-align:center; padding:32px 32px 28px; background:linear-gradient(180deg,#FFFDF6,#FFFFFF); border:1.5px solid #A8842F; border-radius:var(--radius); box-shadow:var(--shadow), inset 0 0 0 4px #F3EAD2; position:relative;}
+  .about::before,.about::after{content:""; position:absolute; width:10px; height:10px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #FDE68A, #92400E); top:10px}
+  .about::before{left:10px}.about::after{right:10px}
+  .about h2{margin:0 0 12px; font-size:.92rem; font-weight:800; letter-spacing:.18em; color:var(--gold-bright);}
+  .about p{margin:0 auto; max-width:640px; color:var(--ink-soft); font-size:1.05rem; line-height:1.68;}
+  .about p + p{ margin-top:12px; }
+  .about p strong{ color:var(--ink); font-weight:700; }
+
+  .stats{margin:22px auto 0; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:920px;}
+  .stat{position:relative; overflow:hidden; background:linear-gradient(180deg,var(--card-2),var(--card)); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px 12px 18px; text-align:center;}
+  .stat::after{content:""; position:absolute; left:0; top:0; height:4px; width:100%; background:linear-gradient(90deg,var(--gold-deep),var(--teal)); transform:scaleX(0); transform-origin:left; transition:transform 1.2s cubic-bezier(.22,.8,.3,1) .15s;}
+  .stats.inview .stat::after{transform:scaleX(1)}
+  .stats.inview .stat:nth-child(2)::after{transition-delay:.3s}
+  .stats.inview .stat:nth-child(3)::after{transition-delay:.45s}
+  .stats.inview .stat:nth-child(4)::after{transition-delay:.6s}
+  .stat-num{font-size:2.7rem; font-weight:800; line-height:1; color:var(--gold-bright); letter-spacing:-.02em}
+  .stat-label{margin-top:9px; font-size:.92rem; font-weight:600; color:var(--ink-faint); line-height:1.35}
+  @media (max-width:620px){ .stats{grid-template-columns:repeat(2,1fr)} }
+  .stats-info{display:flex; justify-content:center; margin-top:12px}
+
+  .marquee-wrap{position:relative; margin:32px auto 0; max-width:920px}
+  .marquee{border-top:1.5px solid var(--line-strong); border-bottom:1.5px solid var(--line-strong); overflow:hidden; padding:12px 0; -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
+  .marquee.paused .marquee-track{animation-play-state:paused}
+  .marquee-toggle{position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:2; background:#FFFFFF; border:1.5px solid var(--line-strong); border-radius:999px; color:var(--ink); font-size:.82rem; font-weight:700; padding:6px 14px; cursor:pointer; min-height:44px;}
+  .marquee-toggle:hover{border-color:var(--gold-deep); color:var(--gold-bright)}
+  .marquee-track{display:flex; gap:0; width:max-content; animation:marqueeMove 28s linear infinite;}
+  .marquee:hover .marquee-track{animation-play-state:paused}
+  .marquee-track span{font-size:.88rem; font-weight:800; letter-spacing:.24em; color:var(--gold-bright); white-space:nowrap; padding-right:.6em;}
+  @keyframes marqueeMove{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+  .marquee-info{display:flex; justify-content:center; margin-top:10px}
+
+  .section-head{ text-align:center; margin:72px 0 8px; }
+  .section-eyebrow{color:var(--teal); font-weight:800; letter-spacing:.22em; font-size:.82rem; text-transform:uppercase; margin:0 0 10px}
+  .section-title{font-size:clamp(2.4rem, 7vw, 3.8rem); font-weight:800; letter-spacing:.1em; margin:0; color:var(--ink); line-height:1;}
+  .section-note{color:var(--ink-faint); font-size:1.02rem; margin:12px 0 0; font-weight:600}
+  .section-title{position:relative; display:inline-block; padding-bottom:14px}
+  .section-title::after{content:""; position:absolute; left:6%; bottom:0; width:88%; height:6px; border-radius:99px; background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--teal)); transform:scaleX(0); transform-origin:left; transition:transform 1s cubic-bezier(.22,.8,.3,1) .2s;}
+  .section-head.inview .section-title::after{transform:scaleX(1)}
+
+  .filter-dock{position:sticky; top:12px; z-index:40; margin:28px auto 8px; max-width:960px; background:rgba(255,255,255,.92); backdrop-filter:blur(14px); border:1px solid var(--line-strong); border-radius:999px; padding:10px; box-shadow:0 14px 30px rgba(84,60,8,.16)}
+  .filters{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:0;}
+  .filter-btn{border:1.5px solid transparent; background:transparent; color:var(--ink-soft); border-radius:999px; padding:9px 17px; font-size:.95rem; font-weight:700; cursor:pointer; transition:background .2s ease, color .2s ease, border-color .2s ease, transform .15s ease;}
+  .filter-btn:hover{border-color:var(--line-strong); color:var(--ink); background:#FFFBEB}
+  .filter-btn[aria-pressed="true"]{background:#FBBF24; border-color:#92400E; color:#1A1400; text-decoration:underline; text-underline-offset:3px}
+  .filter-count{text-align:center; color:var(--ink-faint); font-size:.98rem; font-weight:600; margin:16px 0 6px; min-height:1.5em;}
+  .dock-info{display:flex; justify-content:center; margin:0 0 14px}
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; list-style:none; margin:0; padding:0;}
+  @media (min-width:721px){
+    .grid .card:first-child{grid-column:span 2; padding:32px 32px 28px; background:linear-gradient(135deg, #FFF3D6 0%, var(--card) 55%); border-color:var(--line-strong)}
+    .grid .card:first-child h3{font-size:1.7rem}
+    .grid .card:first-child p{font-size:1.12rem; max-width:640px}
+  }
+  @media (max-width:720px){ .grid{grid-template-columns:1fr} .filter-dock{border-radius:20px; position:static} }
+
+  /* Cards styled as framed pieces with a museum wall label */
+  .card{position:relative; background:linear-gradient(180deg,var(--card-2),var(--card)); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:26px 26px 24px; overflow:hidden; transform-style:preserve-3d; will-change:transform;}
+  .card::before{content:""; position:absolute; top:10px; left:50%; margin-left:-14px; width:28px; height:8px; border-radius:99px; background:linear-gradient(180deg,#D6C48A,#A8842F); box-shadow:0 2px 4px rgba(84,60,8,.3)} /* picture hook */
+  .card:hover{box-shadow:var(--shadow-hover); border-color:#A08C5A}
+  .card-index{position:absolute; right:10px; bottom:-18px; font-size:5.6rem; font-weight:800; line-height:1; letter-spacing:-.02em; color:transparent; -webkit-text-stroke:1.5px rgba(146,64,14,.25); pointer-events:none; user-select:none; transition:transform .5s cubic-bezier(.22,.8,.3,1);}
+  .card:hover .card-index{transform:translateY(-4px)}
+  .card .beam{position:absolute; inset:0; border-radius:inherit; padding:2px; background:conic-gradient(from var(--beam-a,0deg), transparent 0deg, transparent 255deg, rgba(217,119,6,0) 285deg, var(--gold-deep) 325deg, var(--gold) 340deg, transparent 360deg); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite:exclude; opacity:0; transition:opacity .3s ease; pointer-events:none;}
+  .card:hover .beam, .card:focus-within .beam{opacity:1; animation:beamSpin 2.8s linear infinite}
+  @keyframes beamSpin{from{--beam-a:0deg} to{--beam-a:360deg}}
+  .card .sheen{position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .25s ease; background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%), rgba(245,158,11,.16), rgba(255,255,255,0) 65%);}
+  .card:hover .sheen{opacity:1}
+  .card.revealed{ transition:box-shadow .25s ease; }
+  .card.filter-entering{animation:cardIn .45s cubic-bezier(.22,.8,.3,1) both}
+  @keyframes cardIn{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:translateY(0)}}
+  .card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
+  .card-date{font-size:.88rem; font-weight:700; color:var(--ink-faint); letter-spacing:.06em; padding-top:5px; white-space:nowrap; text-transform:uppercase}
+  .card h3{font-size:1.38rem; line-height:1.32; font-weight:800; margin:14px 0 8px; color:var(--ink);}
+  .card p{margin:0; color:var(--ink-soft); font-size:1.03rem; line-height:1.62; max-width:52ch}
+  .card-foot{margin-top:14px; padding-top:12px; border-top:1px dashed var(--line-strong); display:flex; align-items:center; gap:10px}
+  .card-foot .label-tag{font-size:.8rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint)}
+  .card .info-btn{width:32px; height:32px; min-width:32px; min-height:32px; font-size:.85rem; margin-left:auto}
+
+  .pill{display:inline-flex; align-items:center; gap:7px; border-radius:999px; padding:6px 13px 6px 10px; font-size:.82rem; font-weight:800; letter-spacing:.02em; white-space:nowrap; line-height:1.3; border:1px solid rgba(27,23,16,.25)}
+  .pill::before{content:""; width:8px; height:8px; border-radius:50%; background:currentColor; opacity:.9; flex:none}
+  .pill-shipped{background:#BBF7D0; color:#052E16}
+  .pill-live{background:#DDD6FE; color:#2E1065}
+  .pill-done{background:#99F6E4; color:#042F2E}
+  .pill-progress{background:#BFDBFE; color:#172554}
+  .pill-parked{background:#E7E5E4; color:#1C1917}
+  .pill-waiting{background:#FEF08A; color:#422006}
+
+  .empty-note{display:none; text-align:center; color:var(--ink-soft); background:var(--card); border:1px dashed var(--line-strong); border-radius:var(--radius); padding:32px 20px; font-weight:600;}
+  .empty-note.show{display:block}
+  .plain-list{max-width:720px; margin:0 auto; color:var(--ink-soft); font-size:1rem; line-height:1.7}
+  .plain-list li{margin-bottom:6px}
+
+  .a11y-note{margin:72px auto 0; max-width:760px; text-align:center; padding:34px 32px 30px; background:linear-gradient(135deg, rgba(251,191,36,.25), rgba(45,212,191,.14) 55%, #FFFFFF); border:1.5px solid var(--line-strong); border-radius:var(--radius); box-shadow:var(--shadow);}
+  .a11y-note h2{margin:0 0 12px; font-size:.92rem; font-weight:800; letter-spacing:.18em; color:var(--gold-bright);}
+  .a11y-note p{margin:0 auto; max-width:640px; color:var(--ink-soft); font-size:1.06rem; line-height:1.68;}
+  .a11y-note p strong{ color:var(--ink); font-weight:700; }
+  .a11y-note a, footer a{color:var(--focus); font-weight:800; text-decoration:underline; text-underline-offset:3px;}
+  .a11y-note a:hover, footer a:hover{ text-decoration-thickness:2px; }
+  .a11y-foot{display:flex; justify-content:center; margin-top:16px}
+
+  #toTop{position:fixed; right:18px; bottom:18px; z-index:65; width:52px; height:52px; min-width:52px; min-height:52px; border-radius:50%; border:2px solid #92400E; background:#FBBF24; color:#1A1400; cursor:pointer; font-size:1.25rem; font-weight:800; line-height:1; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 28px rgba(84,60,8,.3); transition:background .2s ease, transform .2s ease;}
+  #toTop:hover{background:#FCD34D; transform:translateY(-2px)}
+
+  footer{text-align:center; margin:56px 0 26px; padding-top:28px; border-top:1px solid var(--line-strong); color:var(--ink-faint); font-size:.98rem; font-weight:600;}
+
+  @media (max-width:400px){
+    .wrap{padding:0 14px 32px}
+    header.top{padding-top:40px}
+    .card{padding:20px 18px}
+    .about, .a11y-note{padding:24px 18px 22px}
+    .instrument{padding:18px 16px}
+    .stat{padding:16px 8px 14px}
+    .stat-num{font-size:2rem}
+    .card-top{flex-wrap:wrap}
+    .hero-cta a{width:100%}
+    .dimmer-row{grid-template-columns:74px 1fr 42px}
+    .clock-wrap{gap:14px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important;}
+    .blob, .spot{animation:none !important}
+    .type-cursor{animation:none !important}
+    .card.filter-entering{animation:none !important}
+    .grain{animation:none !important}
+    #lantern{display:none !important}
+    .seal{animation:none !important}
+    .marquee-track{animation:none !important; flex-wrap:wrap; width:auto}
+    .card .beam{animation:none !important}
+    .wall-title .char{animation:none !important}
+    .hand-sec{transition:none !important}
+    .stat::after, .section-title::after{transform:scaleX(1) !important; transition:none !important}
+  }
+  @media (forced-colors: active){
+    .blob, .grain, #lantern, .card .beam, .card-index, .card .sheen, .marquee, .spotlights, .seal, .track-rail, .lamp, .level-bubble{display:none !important}
+    .card, .stat, .about, .a11y-note, .filter-dock, .instrument, .plan{border:1px solid CanvasText}
+    .pill{border:1px solid CanvasText; forced-color-adjust:none}
+    .info-btn{border:2px solid ButtonText}
+    #wcagTip{border:1.5px solid CanvasText}
+    #progress{background:Highlight}
+    .section-title::after, .stat::after{background:Highlight}
+    body{background:Canvas}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<div id="progress" aria-hidden="true"></div>
+<div class="blobs" aria-hidden="true"><div class="blob blob-a"></div><div class="blob blob-b"></div><div class="blob blob-c"></div></div>
+<div class="grain" aria-hidden="true"></div>
+<div id="lantern" aria-hidden="true"></div>
+<div id="wcagTip" role="tooltip" hidden></div>
+
+<div class="wrap">
+  <header class="top" id="top-section">
+    <div class="spotlights" aria-hidden="true"><div class="spot spot-l"></div><div class="spot spot-c"></div><div class="spot spot-r"></div></div>
+    <div class="track-rail" aria-hidden="true"><span class="lamp lamp-l"></span><span class="lamp lamp-c"></span><span class="lamp lamp-r"></span></div>
+    <svg class="seal" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+      <defs><path id="sealCircle" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+      <circle cx="60" cy="60" r="58" fill="none" stroke="#6B6252" stroke-width="1.5"/>
+      <circle cx="60" cy="60" r="30" fill="none" stroke="#92400E" stroke-width="1.5"/>
+      <text fill="#7C3F00" font-size="10.5" font-weight="700" letter-spacing="3.5"><textPath href="#sealCircle">AUDIT • TRIAL • STUDIO • </textPath></text>
+      <text x="60" y="66" text-anchor="middle" fill="#1B1710" font-size="13" font-weight="800">ATS</text>
+    </svg>
+    <p class="hero-badge"><i aria-hidden="true"></i> Now showing — Sept to Nov 2026</p>
+    <h1 class="wall-title">Audit Trial Studio</h1>
+    <p class="header-line">
+      <span class="visually-hidden">Tools tell you what to do next. A wall tells you who you've already been.</span>
+      <span id="typeTarget" aria-hidden="true">Tools tell you what to do next. A wall tells you who you've already been.</span>
+    </p>
+    <p class="sub-line">September to November 2026, the work so far. Hung in order, lit like it matters.</p>
+    <div class="hero-cta">
+      <a class="cta-primary" href="#exhibition">Enter the exhibition ↓</a>
+      <a class="cta-ghost" href="#about-heading">How this was made</a>
+    </div>
+    <div class="rule" aria-hidden="true"></div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+
+    <section class="workwall" aria-labelledby="workwall-heading">
+      <div class="workwall-head">
+        <h2 id="workwall-heading">THE WORKING WALL</h2>
+        <p>Nothing here is set dressing. Every object on this wall does a real job. Tap the small <strong>i</strong> on each one to see why it passes WCAG.</p>
+      </div>
+      <div class="workwall-grid">
+
+        <div class="instrument">
+          <div class="info-row">
+            <h3 class="grow">Gallery clock</h3>
+            <button type="button" class="info-btn" data-tip-title="Why the clock passes" data-tip="The clock keeps real local time, but the time is never trapped in the picture. The same time is written out as text next to the hands and updates every second, so nobody has to read hand positions to get it. That is WCAG 1.1.1 (text alternative for non-text content) and 1.3.1 (information available in text, not by shape or position alone). The hands and rim are decoration-deep colours on a near-white face, well past the 3:1 non-text contrast bar in 1.4.11." aria-label="Why the gallery clock passes WCAG">i</button>
+          </div>
+          <p class="inst-note">A real clock, on the wall, keeping your local time.</p>
+          <div class="inst-body clock-wrap">
+            <div class="clock-face" aria-hidden="true">
+              <span class="clock-tick" style="transform:rotate(0deg) translateY(-52px)"></span>
+              <span class="clock-tick" style="transform:rotate(90deg) translateY(-52px)"></span>
+              <span class="clock-tick" style="transform:rotate(180deg) translateY(-52px)"></span>
+              <span class="clock-tick" style="transform:rotate(270deg) translateY(-52px)"></span>
+              <span class="hand hand-hour" id="handHour"></span>
+              <span class="hand hand-min" id="handMin"></span>
+              <span class="hand hand-sec" id="handSec"></span>
+              <span class="clock-pin"></span>
+            </div>
+            <p class="clock-readout">
+              <strong><time id="clockTime" datetime="">--:--:--</time></strong>
+              <span id="clockDate">Loading the date…</span><br>
+              <span class="tz" id="clockTz">Your local time</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="instrument">
+          <div class="info-row">
+            <h3 class="grow">Track lights — working dimmers</h3>
+            <button type="button" class="info-btn" data-tip-title="Why the dimmers pass" data-tip="These sliders really dim the three lamps on the rail above the title. They are native range inputs with a visible text label and a percentage readout each, so the setting is never carried by brightness alone — that covers WCAG 1.3.1 and 1.4.1 (not colour or sensation only). Each slider is keyboard-operable with the arrow keys (2.1.1), shows the blue focus outline (2.4.7), and its thumb is 30px with a 44px tall control row, clearing the 24px target minimum in 2.5.8. Dimming the lamps never dims any text, so reading contrast in 1.4.3 is untouched." aria-label="Why the track light dimmers pass WCAG">i</button>
+          </div>
+          <p class="inst-note">Slide them and watch the lamps above the title change.</p>
+          <div class="inst-body">
+            <div class="dimmer-row">
+              <label for="dimL">Left lamp</label>
+              <input type="range" id="dimL" min="20" max="100" step="5" value="70">
+              <output id="outL" for="dimL">70%</output>
+            </div>
+            <div class="dimmer-row">
+              <label for="dimC">Centre lamp</label>
+              <input type="range" id="dimC" min="20" max="100" step="5" value="85">
+              <output id="outC" for="dimC">85%</output>
+            </div>
+            <div class="dimmer-row">
+              <label for="dimR">Right lamp</label>
+              <input type="range" id="dimR" min="20" max="100" step="5" value="60">
+              <output id="outR" for="dimR">60%</output>
+            </div>
+          </div>
+        </div>
+
+        <div class="instrument">
+          <div class="info-row">
+            <h3 class="grow">Spirit level</h3>
+            <button type="button" class="info-btn" data-tip-title="Why the spirit level passes" data-tip="The bubble really moves, driven by a labelled slider underneath it, and the result is also spoken in plain numbers: the readout states the tilt in degrees and says in words whether the hang is level. So the answer never depends on judging a bubble position by eye — WCAG 1.3.1 and 1.4.1. The slider works by keyboard (2.1.1) with a visible focus outline (2.4.7), the degree text is dark ink on white at over 13:1, far past 1.4.3, and the green vial markings are decoration, never the only signal." aria-label="Why the spirit level passes WCAG">i</button>
+          </div>
+          <p class="inst-note">The tool that hung every piece straight. Try it.</p>
+          <div class="inst-body">
+            <div class="level-body" aria-hidden="true">
+              <div class="level-vial"><div class="level-bubble" id="levelBubble"></div></div>
+              <div class="level-marks"><span>-5°</span><span>CENTRE</span><span>+5°</span></div>
+            </div>
+            <p class="level-readout" id="levelReadout" aria-live="polite"><strong>0.0°</strong> — level. Bubble centred, hang is straight.</p>
+            <div class="dimmer-row" style="grid-template-columns:86px 1fr 48px; margin-top:8px">
+              <label for="levelSlider">Tilt</label>
+              <input type="range" id="levelSlider" min="-5" max="5" step="0.1" value="0">
+              <output id="levelOut" for="levelSlider">0.0°</output>
+            </div>
+          </div>
+        </div>
+
+        <div class="instrument">
+          <div class="info-row">
+            <h3 class="grow">Exhibition floor plan</h3>
+            <button type="button" class="info-btn" data-tip-title="Why the floor plan passes" data-tip="This plan is a working map, not a picture of one. Every room is a real button with its name and job written in text, so the layout works without ever seeing the drawing — WCAG 1.1.1 and 1.3.1. Buttons are at least 64px tall, well over the 2.5.8 target minimum, fully keyboard-operable (2.1.1) with a clear focus outline (2.4.7), and pressing one moves you to that part of the page and says where you landed. Room borders are dashed versus solid on hover, but the names do the work, not the line style (1.4.1)." aria-label="Why the exhibition floor plan passes WCAG">i</button>
+          </div>
+          <p class="inst-note">A map of this page. Press a room to go there.</p>
+          <div class="inst-body">
+            <div class="plan">
+              <button type="button" class="plan-room" data-goto="top-section">Entrance<small>Title &amp; track lights</small></button>
+              <button type="button" class="plan-room" data-goto="about-heading">About<small>How this was made</small></button>
+              <button type="button" class="plan-room wide" data-goto="exhibition">Exhibition<small>All 26 pieces, filterable</small></button>
+              <button type="button" class="plan-room wide" data-goto="a11y-heading">Accessibility<small>The standard &amp; the quiz</small></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="about" aria-labelledby="about-heading">
+      <h2 id="about-heading" tabindex="-1">ABOUT THIS STUDIO</h2>
+      <p><strong>Every piece on this wall was built with AI assistance, openly, on purpose.</strong></p>
+      <p>The output is only this fast, and only this good, because the person directing it has a professional and educational background in web development. The tools are new. The judgment behind them is not.</p>
+    </section>
+
+    <section class="stats" id="stats" aria-label="Audit Trial Studio at a glance">
+      <div class="stat"><div class="stat-num" data-stat="total" data-count="26">26</div><div class="stat-label">Pieces on the wall</div></div>
+      <div class="stat"><div class="stat-num" data-stat="shippedLive" data-count="13">13</div><div class="stat-label">Shipped or live</div></div>
+      <div class="stat"><div class="stat-num" data-stat="months" data-count="2">2</div><div class="stat-label">Months covered</div></div>
+      <div class="stat"><div class="stat-num" data-stat="waiting" data-count="3">3</div><div class="stat-label">Waiting on you</div></div>
+    </section>
+    <div class="stats-info">
+      <span style="display:inline-flex; align-items:center; gap:10px; font-weight:600; color:var(--ink-faint); font-size:.95rem">About these counters
+        <button type="button" class="info-btn" data-tip-title="Why the counters pass" data-tip="The numbers count up as decoration, but they are never only an animation. Each finished number sits in real text under a plain-language label, so the total is readable with motion off, with a screen reader, or at a glance — WCAG 1.3.1 and 4.1.3. The count respects prefers-reduced-motion and simply shows the final number (2.3.3 / 2.2.2 spirit), and the gold number text is a dark bronze on white at about 7.6:1, comfortably past the 4.5:1 text bar in 1.4.3." aria-label="Why the stat counters pass WCAG">i</button>
+      </span>
+    </div>
+
+    <div class="marquee-wrap">
+      <div class="marquee" id="marquee" aria-hidden="true">
+        <div class="marquee-track" id="marqueeTrack">
+          <span>SHIPPED &#183; LIVE &#183; DONE &#183; IN PROGRESS &#183; PARKED &#183; WAITING ON YOU &#183; SHIPPED &#183; LIVE &#183; DONE &#183; IN PROGRESS &#183; PARKED &#183; WAITING ON YOU &#183;&nbsp;</span>
+          <span>SHIPPED &#183; LIVE &#183; DONE &#183; IN PROGRESS &#183; PARKED &#183; WAITING ON YOU &#183; SHIPPED &#183; LIVE &#183; DONE &#183; IN PROGRESS &#183; PARKED &#183; WAITING ON YOU &#183;&nbsp;</span>
+        </div>
+      </div>
+      <button type="button" class="marquee-toggle" id="marqueeToggle" aria-pressed="false">Pause ticker</button>
+    </div>
+    <div class="marquee-info">
+      <span style="display:inline-flex; align-items:center; gap:10px; font-weight:600; color:var(--ink-faint); font-size:.95rem">About the moving ticker
+        <button type="button" class="info-btn" data-tip-title="Why the ticker passes" data-tip="Moving text is a classic WCAG trip hazard, so this one ships with its own off switch. The Pause ticker button stops it outright, satisfying WCAG 2.2.2 (pause, stop, hide), it pauses on hover, and it never moves at all for anyone with prefers-reduced-motion set. The ticker is hidden from screen readers because it only repeats the six status words that the filter buttons and every card label already state in full — no information lives only in the motion (1.3.1)." aria-label="Why the moving ticker passes WCAG">i</button>
+      </span>
+    </div>
+
+    <div class="section-head" id="sectionHead">
+      <p class="section-eyebrow">The Exhibition</p>
+      <h2 class="section-title" id="exhibition" tabindex="-1">AI TRAINING</h2>
+      <p class="section-note">Every piece, in the order it happened. Filter by status to walk one row at a time.</p>
+    </div>
+
+    <div class="filter-dock">
+      <nav class="filters" id="filters" aria-label="Filter pieces by status">
+        <button type="button" class="filter-btn" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="filter-btn" data-filter="shipped" aria-pressed="false">Shipped</button>
+        <button type="button" class="filter-btn" data-filter="live" aria-pressed="false">Live</button>
+        <button type="button" class="filter-btn" data-filter="done" aria-pressed="false">Done</button>
+        <button type="button" class="filter-btn" data-filter="progress" aria-pressed="false">In Progress</button>
+        <button type="button" class="filter-btn" data-filter="parked" aria-pressed="false">Parked</button>
+        <button type="button" class="filter-btn" data-filter="waiting" aria-pressed="false">Waiting on You</button>
+      </nav>
+    </div>
+    <p class="filter-count" id="filterCount" aria-live="polite"></p>
+    <div class="dock-info">
+      <span style="display:inline-flex; align-items:center; gap:10px; font-weight:600; color:var(--ink-faint); font-size:.95rem">About these filters
+        <button type="button" class="info-btn" data-tip-title="Why the filters pass" data-tip="Each filter is a real button with aria-pressed, so its on/off state is announced, not just shown in gold — WCAG 1.4.1 and 4.1.2. The selected button also gains an underline, a second non-colour cue. Buttons are at least 44px tall (2.5.8), the result count is read out politely as it changes (4.1.3), and the whole dock stays usable at 320px wide and 400% zoom with nothing cut off (1.4.10)." aria-label="Why the filter buttons pass WCAG">i</button>
+      </span>
+    </div>
+
+    <ul class="grid" id="grid"></ul>
+
+    <noscript>
+      <ul class="plain-list">
+        <li>A professional profile relaunch, Oct 2026, Live</li>
+        <li>An audit report template, Oct 2026, Parked</li>
+        <li>A referral post, Oct 30, Live</li>
+        <li>A business website, Oct 31, Live</li>
+        <li>A three-part article series, Nov 5, Shipped</li>
+        <li>An inbox declutter, Nov 7, Done</li>
+        <li>Contract submission No. 4, Nov 8, Shipped</li>
+        <li>An art collection, first piece, Nov 9, Live</li>
+        <li>An art collection, second piece, Nov 9, Live</li>
+        <li>A court prep plan, Nov 9, In Progress</li>
+        <li>A portrait, third version, Nov 9, Waiting on You</li>
+        <li>A three-article batch, Nov 10, Live</li>
+        <li>A posting pipeline, rebuilt, Nov 10, Live</li>
+        <li>A business structure decision, Nov 10, Waiting on You</li>
+        <li>A trading system, planned, Nov 10, Waiting on You</li>
+        <li>A co-op game, prototyped, Nov 10, Parked</li>
+        <li>A ridiculous GIF, Nov 10, Done</li>
+        <li>A medication research page, Nov 10, In Progress</li>
+        <li>A new dinner system, Nov 10, In Progress</li>
+        <li>A first harvest, Nov 10, Done</li>
+        <li>An online exhibition, Nov 11, Live</li>
+        <li>A six-part explainer series, Nov 11, Live</li>
+        <li>A training course, module one, Nov 11, Shipped</li>
+        <li>A companion, given a face, Nov 12, Done</li>
+        <li>A birthday, prepared, Nov 17, In Progress</li>
+        <li>A gift command center, Ongoing, Live</li>
+      </ul>
+    </noscript>
+
+    <p class="empty-note" id="emptyNote">Nothing on the wall with that status right now.</p>
+
+    <section class="a11y-note" aria-labelledby="a11y-heading">
+      <h2 id="a11y-heading" tabindex="-1">ACCESSIBILITY</h2>
+      <p><strong>This page is built to WCAG accessibility standards, the same standards business owners are now being held to in court.</strong> <a href="https://sirhcuit.github.io/circuit-research/#quiz">Take the 3 minute accessibility quiz</a> and find out where your website stands today.</p>
+      <div class="a11y-foot">
+        <span style="display:inline-flex; align-items:center; gap:10px; font-weight:600; color:var(--ink-faint); font-size:.95rem">About this panel
+          <button type="button" class="info-btn" data-tip-title="Why this panel passes" data-tip="This panel makes a claim, so it is built to be checked. Its link is underlined and written to describe its destination out of context, WCAG 2.4.4, instead of saying click here. Link blue on this light ground measures about 7.4:1, past the 4.5:1 text bar in 1.4.3, body text is dark ink at over 13:1, and the panel keeps a solid border in forced-colours mode so its edges survive when backgrounds are stripped (1.4.11)." aria-label="Why the accessibility panel passes WCAG">i</button>
+        </span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer><a href="https://www.linkedin.com/in/circuit-research/">Circuit Research</a> &middot; Private. Built November 12, 2026.</footer>
+</div>
+
+<button type="button" id="toTop" aria-label="Back to top">&#8593;</button>
+
+<script>
+(function(){
+  "use strict";
+  var WALL_PIECES = [
+    { title: "A professional profile relaunch", date: "Oct 2026", description: "Rewritten from the headline down, and live.", status: "live" },
+    { title: "An audit report template", date: "Oct 2026", description: "Built and waiting on the business around it.", status: "parked" },
+    { title: "A referral post", date: "Oct 30", description: "One post, two platforms, live.", status: "live" },
+    { title: "A business website", date: "Oct 31", description: "Built and live, with a self-check quiz at its heart.", status: "live" },
+    { title: "A three-part article series", date: "Nov 5", description: "Finished and published.", status: "shipped" },
+    { title: "An inbox declutter", date: "Nov 7", description: "Thousands of junk messages gone in one night.", status: "done" },
+    { title: "Contract submission No. 4", date: "Nov 8", description: "A major piece of contract writing, all his own words, finished ahead of his own deadline.", status: "shipped" },
+    { title: "An art collection, first piece", date: "Nov 9", description: "Regenerated until it was right, then approved as the official No. 001.", status: "live" },
+    { title: "An art collection, second piece", date: "Nov 9", description: "Renamed as a dedication to someone he loves.", status: "live" },
+    { title: "A court prep plan", date: "Nov 9", description: "Written, thorough, and calendared ahead of a December hearing.", status: "progress" },
+    { title: "A portrait, third version", date: "Nov 9", description: "Likeness over polish. Awaiting the household verdict.", status: "waiting" },
+    { title: "A three-article batch", date: "Nov 10", description: "Researched, written, and published in one run.", status: "live" },
+    { title: "A posting pipeline, rebuilt", date: "Nov 10", description: "When one tool hit its limit, a new lane was built and proven the same night.", status: "live" },
+    { title: "A business structure decision", date: "Nov 10", description: "Options researched and laid out in plain English. The call is his.", status: "waiting" },
+    { title: "A trading system, planned", date: "Nov 10", description: "Designed and stress-tested on paper. Awaiting his rulings before it touches a cent.", status: "waiting" },
+    { title: "A co-op game, prototyped", date: "Nov 10", description: "Two playable characters, built with his partner. Paused by his call; an overhaul leads when it resumes.", status: "parked" },
+    { title: "A ridiculous GIF", date: "Nov 10", description: "Made at midnight, laughed at, sent to exactly the right person.", status: "done" },
+    { title: "A medication research page", date: "Nov 10", description: "Two new prescriptions researched before the first dose. One bottle stays closed until he and his partner review it together.", status: "progress" },
+    { title: "A new dinner system", date: "Nov 10", description: "His partner's food list turned into a full week of real dinners. He cooks now.", status: "progress" },
+    { title: "A first harvest", date: "Nov 10", description: "Grapes off their own vine, juice in the glass, a kid's approval earned.", status: "done" },
+    { title: "An online exhibition", date: "Nov 11", description: "A gallery site polished to the last pixel, every word of copy his.", status: "live" },
+    { title: "A six-part explainer series", date: "Nov 11", description: "Published in full.", status: "live" },
+    { title: "A training course, module one", date: "Nov 11", description: "Built and delivered.", status: "shipped" },
+    { title: "A companion, given a face", date: "Nov 12", description: "Portraits rendered from her own self-description, down to the smallest detail on her neck.", status: "done" },
+    { title: "A birthday, prepared", date: "Nov 17", description: "Everything in hand is wrapped. One gift is still in transit.", status: "progress" },
+    { title: "A gift command center", date: "Ongoing", description: "Every recipient, every list, one place.", status: "live" }
+  ];
+  var STATUS_META = {
+    shipped:  { label: "Shipped",        pill: "pill-shipped" },
+    live:     { label: "Live",           pill: "pill-live" },
+    done:     { label: "Done",           pill: "pill-done" },
+    progress: { label: "In Progress",    pill: "pill-progress" },
+    parked:   { label: "Parked",         pill: "pill-parked" },
+    waiting:  { label: "Waiting on You", pill: "pill-waiting" }
+  };
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var finePointer = window.matchMedia("(pointer: fine)").matches;
+
+  /* ---------- Info tooltip system (hover, focus, tap; Esc dismisses) ---------- */
+  var tip = document.getElementById("wcagTip");
+  var tipOwner = null, tipPinned = false, hideTimer = null;
+  function positionTip(btn){
+    var r = btn.getBoundingClientRect();
+    tip.style.left = "0px"; tip.style.top = "0px";
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var x = Math.min(Math.max(12, r.left + r.width/2 - tw/2), window.innerWidth - tw - 12);
+    var y = r.top - th - 12;
+    if (y < 10) y = r.bottom + 12;
+    if (y + th > window.innerHeight - 8) y = Math.max(8, window.innerHeight - th - 8);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  function showTip(btn, pin){
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (tipOwner && tipOwner !== btn) tipOwner.removeAttribute("aria-describedby");
+    tipOwner = btn; if (pin) tipPinned = true;
+    tip.textContent = "";
+    var strong = document.createElement("strong"); strong.textContent = btn.getAttribute("data-tip-title") || "Why this passes WCAG";
+    tip.appendChild(strong);
+    tip.appendChild(document.createTextNode(btn.getAttribute("data-tip") || ""));
+    tip.hidden = false;
+    btn.setAttribute("aria-describedby", "wcagTip");
+    positionTip(btn);
+  }
+  function hideTip(force){
+    if (tipPinned && !force) return;
+    if (tipOwner) tipOwner.removeAttribute("aria-describedby");
+    tipOwner = null; tipPinned = false; tip.hidden = true;
+  }
+  function scheduleHide(){ hideTimer = setTimeout(function(){ hideTip(false); }, 260); }
+  function bindInfo(btn){
+    btn.addEventListener("mouseenter", function(){ showTip(btn, false); });
+    btn.addEventListener("mouseleave", function(){ scheduleHide(); });
+    btn.addEventListener("focus", function(){ showTip(btn, false); });
+    btn.addEventListener("blur", function(){ scheduleHide(); });
+    btn.addEventListener("click", function(ev){ ev.preventDefault(); if (tipOwner === btn && tipPinned) { hideTip(true); } else { showTip(btn, true); } });
+  }
+  if (tip) {
+    tip.addEventListener("mouseenter", function(){ if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } });
+    tip.addEventListener("mouseleave", function(){ scheduleHide(); });
+    document.addEventListener("keydown", function(ev){ if (ev.key === "Escape" && tipOwner) { var o = tipOwner; hideTip(true); if (o) o.focus(); } });
+    document.addEventListener("pointerdown", function(ev){ if (tipOwner && ev.target !== tip && !tip.contains(ev.target) && ev.target !== tipOwner && !tipOwner.contains(ev.target)) hideTip(true); });
+    window.addEventListener("resize", function(){ if (tipOwner && !tip.hidden) positionTip(tipOwner); });
+    window.addEventListener("scroll", function(){ if (tipOwner && !tip.hidden) positionTip(tipOwner); }, { passive:true });
+  }
+  function bindAllInfo(scope){ Array.prototype.slice.call((scope||document).querySelectorAll(".info-btn")).forEach(function(b){ if (!b.__tipBound) { b.__tipBound = true; bindInfo(b); } }); }
+
+  /* ---------- Wall clock (real local time, text + hands) ---------- */
+  var handHour = document.getElementById("handHour"), handMin = document.getElementById("handMin"), handSec = document.getElementById("handSec");
+  var clockTime = document.getElementById("clockTime"), clockDate = document.getElementById("clockDate"), clockTz = document.getElementById("clockTz");
+  function tickClock(){
+    var now = new Date();
+    var s = now.getSeconds() + now.getMilliseconds()/1000;
+    var m = now.getMinutes() + s/60;
+    var h = (now.getHours()%12) + m/60;
+    if (handSec) handSec.style.transform = "rotate(" + (s*6) + "deg)";
+    if (handMin) handMin.style.transform = "rotate(" + (m*6) + "deg)";
+    if (handHour) handHour.style.transform = "rotate(" + (h*30) + "deg)";
+    if (clockTime) {
+      clockTime.textContent = now.toLocaleTimeString([], { hour:"numeric", minute:"2-digit", second:"2-digit" });
+      clockTime.setAttribute("datetime", now.toISOString());
+    }
+    if (clockDate) clockDate.textContent = now.toLocaleDateString([], { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+  }
+  if (clockTz) { try { clockTz.textContent = "Your local time · " + Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g," "); } catch(e){ clockTz.textContent = "Your local time"; } }
+  tickClock();
+  setInterval(tickClock, reduced ? 1000 : 250);
+
+  /* ---------- Track-light dimmers drive the hero spotlights ---------- */
+  var rootStyle = document.documentElement.style;
+  function wireDimmer(id, outId, varName){
+    var input = document.getElementById(id), out = document.getElementById(outId);
+    if (!input) return;
+    function apply(){ rootStyle.setProperty(varName, (input.value/100).toString()); if (out) out.textContent = input.value + "%"; }
+    input.addEventListener("input", apply); apply();
+  }
+  wireDimmer("dimL","outL","--sl"); wireDimmer("dimC","outC","--sc"); wireDimmer("dimR","outR","--sr");
+
+  /* ---------- Spirit level ---------- */
+  var levelSlider = document.getElementById("levelSlider"), levelBubble = document.getElementById("levelBubble"), levelOut = document.getElementById("levelOut"), levelReadout = document.getElementById("levelReadout");
+  function applyLevel(){
+    if (!levelSlider) return;
+    var v = parseFloat(levelSlider.value);
+    if (levelBubble) levelBubble.style.transform = "translateX(" + (v*11) + "px)";
+    if (levelOut) levelOut.textContent = v.toFixed(1) + "°";
+    if (levelReadout) {
+      levelReadout.textContent = "";
+      var strong = document.createElement("strong"); strong.textContent = v.toFixed(1) + "°"; levelReadout.appendChild(strong);
+      var msg = Math.abs(v) < 0.3 ? " — level. Bubble centred, hang is straight." : (v > 0 ? " — tilts down to the right. Shim the right side." : " — tilts down to the left. Shim the left side.");
+      levelReadout.appendChild(document.createTextNode(msg));
+    }
+  }
+  if (levelSlider) { levelSlider.addEventListener("input", applyLevel); applyLevel(); }
+
+  /* ---------- Floor plan navigation ---------- */
+  Array.prototype.slice.call(document.querySelectorAll(".plan-room")).forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = document.getElementById(btn.getAttribute("data-goto"));
+      if (!target) return;
+      target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+      setTimeout(function(){ target.focus({ preventScroll:true }); }, reduced ? 0 : 450);
+    });
+  });
+
+  /* ---------- Hero title split ---------- */
+  var wallTitle = document.querySelector(".wall-title");
+  if (wallTitle && !reduced) {
+    var titleText = wallTitle.textContent.trim();
+    wallTitle.setAttribute("aria-label", titleText);
+    wallTitle.textContent = "";
+    var charIdx = 0;
+    titleText.split(" ").forEach(function(word, wIdx, words){
+      var w = document.createElement("span");
+      w.className = "word"; w.setAttribute("aria-hidden", "true");
+      word.split("").forEach(function(ch){
+        var s = document.createElement("span");
+        s.className = "char"; s.setAttribute("aria-hidden", "true");
+        s.style.setProperty("--i", charIdx++); s.textContent = ch; w.appendChild(s);
+      });
+      wallTitle.appendChild(w);
+      if (wIdx < words.length - 1) wallTitle.appendChild(document.createTextNode(" "));
+    });
+  }
+
+  /* ---------- Exhibition cards, styled as wall labels ---------- */
+  var grid = document.getElementById("grid");
+  WALL_PIECES.forEach(function(piece, pieceIdx){
+    var meta = STATUS_META[piece.status];
+    var li = document.createElement("li");
+    li.className = "card"; li.setAttribute("data-status", piece.status);
+    var sheen = document.createElement("div"); sheen.className = "sheen"; sheen.setAttribute("aria-hidden", "true"); li.appendChild(sheen);
+    var beam = document.createElement("div"); beam.className = "beam"; beam.setAttribute("aria-hidden", "true"); li.appendChild(beam);
+    var index = document.createElement("span"); index.className = "card-index"; index.setAttribute("aria-hidden", "true"); index.textContent = (pieceIdx + 1 < 10 ? "0" : "") + (pieceIdx + 1); li.appendChild(index);
+    var top = document.createElement("div"); top.className = "card-top";
+    var date = document.createElement("span"); date.className = "card-date"; date.textContent = piece.date; top.appendChild(date);
+    var pill = document.createElement("span"); pill.className = "pill " + meta.pill; pill.textContent = meta.label; top.appendChild(pill); li.appendChild(top);
+    var h = document.createElement("h3"); h.textContent = piece.title; li.appendChild(h);
+    var p = document.createElement("p"); p.textContent = piece.description; li.appendChild(p);
+    var foot = document.createElement("div"); foot.className = "card-foot";
+    var tag = document.createElement("span"); tag.className = "label-tag"; tag.textContent = "Wall label · No. " + (pieceIdx+1); foot.appendChild(tag);
+    var info = document.createElement("button");
+    info.type = "button"; info.className = "info-btn"; info.textContent = "i";
+    info.setAttribute("aria-label", "Why this wall label passes WCAG: " + piece.title);
+    info.setAttribute("data-tip-title", "Why this wall label passes");
+    info.setAttribute("data-tip", "Status on this label is written as the word \u201C" + meta.label + "\u201D inside the pill, never shown by colour alone — WCAG 1.4.1. The pill text sits at over 10:1 contrast and the body text is dark ink on white at about 13:1, both past the 4.5:1 bar in 1.4.3. The heading, date, and description are real text in reading order (1.3.1), the big outlined number behind is pure decoration and hidden from assistive tech, and the label reflows at 320px wide with no sideways scroll (1.4.10).");
+    foot.appendChild(info); li.appendChild(foot);
+    grid.appendChild(li);
+  });
+  var cards = Array.prototype.slice.call(grid.querySelectorAll(".card"));
+  var counts = { total: WALL_PIECES.length, shippedLive: WALL_PIECES.filter(function(x){ return x.status === "shipped" || x.status === "live"; }).length, waiting: WALL_PIECES.filter(function(x){ return x.status === "waiting"; }).length };
+  Object.keys(counts).forEach(function(key){ var el = document.querySelector('[data-stat="' + key + '"]'); if (el) { el.setAttribute("data-count", counts[key]); el.textContent = counts[key]; } });
+
+  bindAllInfo(document);
+
+  /* ---------- Typewriter ---------- */
+  var typeTarget = document.getElementById("typeTarget");
+  var fullText = typeTarget.textContent.trim();
+  if (!reduced) {
+    typeTarget.textContent = "";
+    var cursor = document.createElement("span"); cursor.className = "type-cursor"; cursor.setAttribute("aria-hidden", "true"); typeTarget.appendChild(cursor);
+    var i = 0;
+    function typeStep(){
+      if (i <= fullText.length) { typeTarget.textContent = fullText.slice(0, i); typeTarget.appendChild(cursor); i++; setTimeout(typeStep, 34); }
+      else { setTimeout(function(){ if (cursor.parentNode) cursor.parentNode.removeChild(cursor); }, 2600); }
+    }
+    setTimeout(typeStep, 350);
+  }
+
+  /* ---------- Scroll progress ---------- */
+  var bar = document.getElementById("progress"); var ticking = false;
+  function updateProgress(){ var h = document.documentElement; var max = h.scrollHeight - h.clientHeight; var pct = max > 0 ? (h.scrollTop / max) * 100 : 0; bar.style.width = pct + "%"; ticking = false; }
+  window.addEventListener("scroll", function(){ if (!ticking) { ticking = true; requestAnimationFrame(updateProgress); } }, { passive:true }); updateProgress();
+
+  /* ---------- Card reveal ---------- */
+  if (!reduced && "IntersectionObserver" in window && "animate" in document.body) {
+    var revealObs = new IntersectionObserver(function(entries){
+      var visible = entries.filter(function(e){ return e.isIntersecting; });
+      visible.forEach(function(entry, idx){ var card = entry.target; revealObs.unobserve(card); card.classList.add("revealed"); card.animate([{ opacity: 0, transform: "translateY(26px)" },{ opacity: 1, transform: "translateY(0)" }],{ duration: 650, delay: idx * 90, easing: "cubic-bezier(.22,.8,.3,1)", fill: "backwards" }); });
+    }, { threshold: 0.12, rootMargin: "0px 0px -30px 0px" });
+    cards.forEach(function(c){ revealObs.observe(c); });
+  } else { cards.forEach(function(c){ c.classList.add("revealed"); }); }
+
+  /* ---------- Stat counters ---------- */
+  var nums = document.querySelectorAll(".stat-num");
+  function animateCount(el){ var target = parseInt(el.getAttribute("data-count"), 10) || 0; if (reduced) { el.textContent = target; return; } var start = null, dur = 1300; function step(ts){ if (!start) start = ts; var t = Math.min((ts - start) / dur, 1); var eased = 1 - Math.pow(1 - t, 3); el.textContent = Math.round(target * eased); if (t < 1) requestAnimationFrame(step); else el.textContent = target; } requestAnimationFrame(step); }
+  if ("IntersectionObserver" in window) {
+    var counted = false;
+    var statsObs = new IntersectionObserver(function(entries){ entries.forEach(function(e){ if (e.isIntersecting && !counted) { counted = true; e.target.classList.add("inview"); nums.forEach(animateCount); statsObs.disconnect(); } }); }, { threshold: 0.35 });
+    var statsEl = document.getElementById("stats"); if (statsEl) statsObs.observe(statsEl);
+  }
+
+  /* ---------- Card tilt + sheen ---------- */
+  if (!reduced && finePointer) {
+    cards.forEach(function(card){
+      var raf = null, lastEv = null;
+      card.addEventListener("pointermove", function(ev){ lastEv = ev; if (raf) return; raf = requestAnimationFrame(function(){ raf = null; var r = card.getBoundingClientRect(); var px = (lastEv.clientX - r.left) / r.width; var py = (lastEv.clientY - r.top) / r.height; card.style.setProperty("--mx", (px * 100) + "%"); card.style.setProperty("--my", (py * 100) + "%"); var rx = (0.5 - py) * 6; var ry = (px - 0.5) * 6; card.style.transform = "perspective(900px) rotateX(" + rx.toFixed(2) + "deg) rotateY(" + ry.toFixed(2) + "deg) translateY(-3px)"; card.style.transition = "transform .08s ease-out, box-shadow .25s ease"; }); });
+      card.addEventListener("pointerleave", function(){ card.style.transition = "transform .55s cubic-bezier(.22,1.4,.36,1), box-shadow .25s ease"; card.style.transform = ""; setTimeout(function(){ card.style.transition = ""; }, 580); });
+    });
+  }
+
+  /* ---------- Filters ---------- */
+  var buttons = Array.prototype.slice.call(document.querySelectorAll(".filter-btn"));
+  var countEl = document.getElementById("filterCount"); var emptyNote = document.getElementById("emptyNote");
+  function finishFilter(key, matching){ if (key === "all") { countEl.textContent = "Showing all " + matching.length + " pieces."; } else { countEl.textContent = "Showing " + matching.length + (matching.length === 1 ? " piece" : " pieces") + " marked " + STATUS_META[key].label + "."; } emptyNote.classList.toggle("show", matching.length === 0); }
+  function applyFilter(key){
+    buttons.forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-filter") === key ? "true" : "false"); });
+    var matching = cards.filter(function(c){ return key === "all" || c.getAttribute("data-status") === key; });
+    if (reduced || !("animate" in document.body)) { cards.forEach(function(c){ c.style.display = matching.indexOf(c) !== -1 ? "" : "none"; }); finishFilter(key, matching); return; }
+    var first = new Map(); cards.forEach(function(c){ if (c.style.display !== "none") first.set(c, c.getBoundingClientRect()); });
+    cards.forEach(function(c){ var show = matching.indexOf(c) !== -1; c.style.display = show ? "" : "none"; c.classList.add("revealed"); });
+    matching.forEach(function(c, idx){ var last = c.getBoundingClientRect(); var f = first.get(c); if (f && (f.left - last.left || f.top - last.top)) { c.animate([{ transform: "translate(" + (f.left - last.left) + "px," + (f.top - last.top) + "px)" }, { transform: "translate(0,0)" }], { duration: 420, easing: "cubic-bezier(.22,.8,.3,1)", delay: Math.min(idx * 30, 180) }); } else { c.classList.remove("filter-entering"); void c.offsetWidth; c.style.animationDelay = Math.min(idx * 35, 210) + "ms"; c.classList.add("filter-entering"); } });
+    finishFilter(key, matching); updateProgress();
+  }
+  buttons.forEach(function(b){ b.addEventListener("click", function(){ applyFilter(b.getAttribute("data-filter")); }); });
+  finishFilter("all", cards);
+
+  /* ---------- Marquee pause ---------- */
+  var marqueeEl = document.getElementById("marquee"); var marqueeToggle = document.getElementById("marqueeToggle");
+  if (marqueeEl && marqueeToggle) {
+    if (reduced) { marqueeEl.classList.add("paused"); marqueeToggle.setAttribute("aria-pressed", "true"); marqueeToggle.textContent = "Play ticker"; }
+    marqueeToggle.addEventListener("click", function(){ var paused = marqueeEl.classList.toggle("paused"); marqueeToggle.setAttribute("aria-pressed", paused ? "true" : "false"); marqueeToggle.textContent = paused ? "Play ticker" : "Pause ticker"; });
+  }
+
+  /* ---------- Section head underline ---------- */
+  var sectionHead = document.getElementById("sectionHead");
+  if (sectionHead) {
+    if (reduced || !("IntersectionObserver" in window)) { sectionHead.classList.add("inview"); }
+    else { var headObs = new IntersectionObserver(function(entries){ entries.forEach(function(e){ if (e.isIntersecting) { sectionHead.classList.add("inview"); headObs.disconnect(); } }); }, { threshold: 0.4 }); headObs.observe(sectionHead); }
+  }
+
+  /* ---------- Lantern + magnetic buttons + hero parallax ---------- */
+  if (!reduced && finePointer) {
+    var lantern = document.getElementById("lantern");
+    var lx = -600, ly = -600, tx = -600, ty = -600, lanternRaf = null;
+    function lanternStep(){ lx += (tx - lx) * 0.08; ly += (ty - ly) * 0.08; lantern.style.transform = "translate(" + lx + "px," + ly + "px)"; if (Math.abs(tx - lx) > 0.5 || Math.abs(ty - ly) > 0.5) { lanternRaf = requestAnimationFrame(lanternStep); } else { lanternRaf = null; } }
+    window.addEventListener("pointermove", function(ev){ tx = ev.clientX; ty = ev.clientY; lantern.classList.add("on"); if (!lanternRaf) lanternRaf = requestAnimationFrame(lanternStep); }, { passive:true });
+    document.addEventListener("pointerleave", function(){ lantern.classList.remove("on"); });
+    buttons.forEach(function(b){
+      b.addEventListener("pointermove", function(ev){ var r = b.getBoundingClientRect(); var dx = (ev.clientX - (r.left + r.width / 2)) / r.width; var dy = (ev.clientY - (r.top + r.height / 2)) / r.height; b.style.transform = "translate(" + (dx * 7).toFixed(1) + "px," + (dy * 5).toFixed(1) + "px)"; });
+      b.addEventListener("pointerleave", function(){ b.style.transform = ""; });
+    });
+    if (wallTitle) {
+      var hero = document.querySelector("header.top");
+      hero.addEventListener("pointermove", function(ev){ var r = hero.getBoundingClientRect(); var dx = (ev.clientX - (r.left + r.width / 2)) / r.width; var dy = (ev.clientY - (r.top + r.height / 2)) / r.height; wallTitle.style.transform = "translate(" + (dx * 8).toFixed(1) + "px," + (dy * 5).toFixed(1) + "px)"; });
+      hero.addEventListener("pointerleave", function(){ wallTitle.style.transform = ""; });
+    }
+  }
+
+  /* ---------- Parallax blobs + back to top ---------- */
+  var toTop = document.getElementById("toTop"); var blobsEl = document.querySelector(".blobs"); var parallaxTicking = false;
+  function onScrollFx(){ var y = window.scrollY || 0; if (!reduced && blobsEl) blobsEl.style.transform = "translateY(" + (y * 0.06).toFixed(1) + "px)"; parallaxTicking = false; }
+  window.addEventListener("scroll", function(){ if (!parallaxTicking) { parallaxTicking = true; requestAnimationFrame(onScrollFx); } }, { passive:true }); onScrollFx();
+  if (toTop) { toTop.addEventListener("click", function(){ window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" }); var main = document.getElementById("main-content"); if (main) main.focus({ preventScroll: true }); }); }
+})();
+</script>
+</body>
+</html>
